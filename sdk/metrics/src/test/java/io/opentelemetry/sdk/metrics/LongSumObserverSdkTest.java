@@ -104,4 +104,56 @@ class LongSumObserverSdkTest {
                         Labels.of("k", "v"),
                         12))));
   }
+
+  @Test
+  void collectMetrics_Observation() {
+    LongSumObserverSdk longSumObserver =
+        testSdk
+            .longSumObserverBuilder("testObserver")
+            .setDescription("My own LongSumObserver")
+            .setUnit("ms")
+            .build();
+    assertThat(longSumObserver.observation(10)).isEqualTo(longSumObserver);
+  }
+
+  @Test
+  void collectMetrics_WithOneObservation() {
+    LongSumObserverSdk longSumObserver = testSdk.longSumObserverBuilder("testObserver").build();
+    BatchObserverSdk observer = testSdk.newBatchObserver("observer");
+    observer.setFunction(
+        result -> result.observe(Labels.of("k", "v"), longSumObserver.observation(12)));
+
+    testClock.advanceNanos(SECOND_NANOS);
+    assertThat(observer.collectAll())
+        .containsExactly(
+            MetricData.create(
+                RESOURCE,
+                INSTRUMENTATION_LIBRARY_INFO,
+                "testObserver",
+                "",
+                "1",
+                MetricData.Type.MONOTONIC_LONG,
+                Collections.singletonList(
+                    LongPoint.create(
+                        testClock.now() - SECOND_NANOS,
+                        testClock.now(),
+                        Labels.of("k", "v"),
+                        12))));
+    testClock.advanceNanos(SECOND_NANOS);
+    assertThat(observer.collectAll())
+        .containsExactly(
+            MetricData.create(
+                RESOURCE,
+                INSTRUMENTATION_LIBRARY_INFO,
+                "testObserver",
+                "",
+                "1",
+                MetricData.Type.MONOTONIC_LONG,
+                Collections.singletonList(
+                    LongPoint.create(
+                        testClock.now() - SECOND_NANOS,
+                        testClock.now(),
+                        Labels.of("k", "v"),
+                        12))));
+  }
 }

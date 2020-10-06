@@ -113,6 +113,63 @@ class DoubleValueObserverSdkTest {
                         valueAtPercentiles(12.1d, 12.1d)))));
   }
 
+  @Test
+  void collectMetrics_Observation() {
+    DoubleValueObserverSdk doubleValueObserver =
+        testSdk
+            .doubleValueObserverBuilder("testObserver")
+            .setDescription("My own LongSumObserver")
+            .setUnit("ms")
+            .build();
+    assertThat(doubleValueObserver.observation(10)).isEqualTo(doubleValueObserver);
+  }
+
+  @Test
+  void collectMetrics_WithOneObservation() {
+    DoubleValueObserverSdk doubleValueObserver =
+        testSdk.doubleValueObserverBuilder("testObserver").build();
+    BatchObserverSdk observer = testSdk.newBatchObserver("observer");
+    observer.setFunction(
+        result -> result.observe(Labels.of("k", "v"), doubleValueObserver.observation(12.1d)));
+
+    testClock.advanceNanos(SECOND_NANOS);
+    assertThat(observer.collectAll())
+        .containsExactly(
+            MetricData.create(
+                RESOURCE,
+                INSTRUMENTATION_LIBRARY_INFO,
+                "testObserver",
+                "",
+                "1",
+                MetricData.Type.SUMMARY,
+                Collections.singletonList(
+                    SummaryPoint.create(
+                        testClock.now() - SECOND_NANOS,
+                        testClock.now(),
+                        Labels.of("k", "v"),
+                        1,
+                        12.1d,
+                        valueAtPercentiles(12.1d, 12.1d)))));
+    testClock.advanceNanos(SECOND_NANOS);
+    assertThat(observer.collectAll())
+        .containsExactly(
+            MetricData.create(
+                RESOURCE,
+                INSTRUMENTATION_LIBRARY_INFO,
+                "testObserver",
+                "",
+                "1",
+                MetricData.Type.SUMMARY,
+                Collections.singletonList(
+                    SummaryPoint.create(
+                        testClock.now() - SECOND_NANOS,
+                        testClock.now(),
+                        Labels.of("k", "v"),
+                        1,
+                        12.1d,
+                        valueAtPercentiles(12.1d, 12.1d)))));
+  }
+
   private static List<ValueAtPercentile> valueAtPercentiles(double min, double max) {
     return Arrays.asList(ValueAtPercentile.create(0, min), ValueAtPercentile.create(100, max));
   }

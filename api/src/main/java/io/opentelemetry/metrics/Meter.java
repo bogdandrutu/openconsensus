@@ -23,163 +23,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * <p>TODO: Update comment.
  */
 @ThreadSafe
-public interface Meter {
-
-  /**
-   * Returns a builder for a {@link DoubleCounter}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a {@code DoubleCounter.Builder}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  DoubleCounter.Builder doubleCounterBuilder(String name);
-
-  /**
-   * Returns a builder for a {@link LongCounter}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a {@code LongCounter.Builder}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  LongCounter.Builder longCounterBuilder(String name);
-
-  /**
-   * Returns a builder for a {@link DoubleUpDownCounter}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a {@code DoubleCounter.Builder}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  DoubleUpDownCounter.Builder doubleUpDownCounterBuilder(String name);
-
-  /**
-   * Returns a builder for a {@link LongUpDownCounter}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a {@code LongCounter.Builder}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  LongUpDownCounter.Builder longUpDownCounterBuilder(String name);
-
-  /**
-   * Returns a new builder for a {@link DoubleValueRecorder}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a new builder for a {@code DoubleValueRecorder}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  DoubleValueRecorder.Builder doubleValueRecorderBuilder(String name);
-
-  /**
-   * Returns a new builder for a {@link LongValueRecorder}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a new builder for a {@code LongValueRecorder}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  LongValueRecorder.Builder longValueRecorderBuilder(String name);
-
-  /**
-   * Returns a new builder for a {@link DoubleSumObserver}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a new builder for a {@code DoubleSumObserver}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  DoubleSumObserver.Builder doubleSumObserverBuilder(String name);
-
-  /**
-   * Returns a new builder for a {@link LongSumObserver}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a new builder for a {@code LongSumObserver}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  LongSumObserver.Builder longSumObserverBuilder(String name);
-
-  /**
-   * Returns a new builder for a {@link DoubleUpDownSumObserver}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a new builder for a {@code DoubleUpDownObserver}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  DoubleUpDownSumObserver.Builder doubleUpDownSumObserverBuilder(String name);
-
-  /**
-   * Returns a new builder for a {@link LongUpDownSumObserver}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a new builder for a {@code LongUpDownSumObserver}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  LongUpDownSumObserver.Builder longUpDownSumObserverBuilder(String name);
-
-  /**
-   * Returns a new builder for a {@link DoubleValueObserver}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a new builder for a {@code DoubleValueObserver}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  DoubleValueObserver.Builder doubleValueObserverBuilder(String name);
-
-  /**
-   * Returns a new builder for a {@link LongValueObserver}.
-   *
-   * @param name the name of the instrument. Should be a ASCII string with a length no greater than
-   *     255 characters.
-   * @return a new builder for a {@code LongValueObserver}.
-   * @throws NullPointerException if {@code name} is null.
-   * @throws IllegalArgumentException if different metric with the same name already registered.
-   * @throws IllegalArgumentException if the {@code name} does not match the requirements.
-   * @since 0.1.0
-   */
-  LongValueObserver.Builder longValueObserverBuilder(String name);
+public interface Meter extends RecorderInstruments, ObserverInstruments {
 
   /**
    * Utility method that allows users to atomically record measurements to a set of Instruments with
@@ -191,4 +35,13 @@ public interface Meter {
    * @since 0.1.0
    */
   BatchRecorder newBatchRecorder(String... keyValuePairs);
+
+  /**
+   * Utility method that allows users to atomically record asynchronous measurements to a set of
+   * Instruments with a common set of labels.
+   *
+   * @param name The name of the BatchObserver.
+   * @return a {@code BatchObserver} that can be used to create new asynchronous instruments.
+   */
+  BatchObserver newBatchObserver(String name);
 }

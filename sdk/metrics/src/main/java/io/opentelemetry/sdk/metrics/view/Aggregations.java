@@ -128,6 +128,8 @@ public class Aggregations {
           return instrumentValueType == InstrumentValueType.LONG
               ? MetricData.Type.NON_MONOTONIC_LONG
               : MetricData.Type.NON_MONOTONIC_DOUBLE;
+        case BATCH_OBSERVER:
+          return MetricData.Type.SUMMARY;
       }
       throw new IllegalArgumentException("Unsupported instrument/value types");
     }

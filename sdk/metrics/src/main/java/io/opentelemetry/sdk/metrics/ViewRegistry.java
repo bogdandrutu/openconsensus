@@ -50,6 +50,7 @@ class ViewRegistry {
         // TODO: Revisit the batcher used here for value observers,
         // currently this does not remove duplicate records in the same cycle.
       case VALUE_OBSERVER:
+      case BATCH_OBSERVER:
         return Batchers.getDeltaAllLabels(
             descriptor, meterProviderSharedState, meterSharedState, aggregation);
     }
@@ -64,6 +65,7 @@ class ViewRegistry {
         return Aggregations.sum();
       case VALUE_RECORDER:
       case VALUE_OBSERVER:
+      case BATCH_OBSERVER:
         return Aggregations.minMaxSumCount();
       case SUM_OBSERVER:
       case UP_DOWN_SUM_OBSERVER:

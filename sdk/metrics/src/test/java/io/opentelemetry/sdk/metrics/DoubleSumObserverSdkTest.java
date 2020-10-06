@@ -105,4 +105,57 @@ class DoubleSumObserverSdkTest {
                         Labels.of("k", "v"),
                         12.1d))));
   }
+
+  @Test
+  void collectMetrics_Observation() {
+    DoubleSumObserverSdk doubleSumObserver =
+        testSdk
+            .doubleSumObserverBuilder("testObserver")
+            .setDescription("My own LongSumObserver")
+            .setUnit("ms")
+            .build();
+    assertThat(doubleSumObserver.observation(11.1d)).isEqualTo(doubleSumObserver);
+  }
+
+  @Test
+  void collectMetrics_WithOneObservation() {
+    DoubleSumObserverSdk doubleSumObserver =
+        testSdk.doubleSumObserverBuilder("testObserver").build();
+    BatchObserverSdk observer = testSdk.newBatchObserver("observer");
+    observer.setFunction(
+        result -> result.observe(Labels.of("k", "v"), doubleSumObserver.observation(12.1d)));
+
+    testClock.advanceNanos(SECOND_NANOS);
+    assertThat(observer.collectAll())
+        .containsExactly(
+            MetricData.create(
+                RESOURCE,
+                INSTRUMENTATION_LIBRARY_INFO,
+                "testObserver",
+                "",
+                "1",
+                MetricData.Type.MONOTONIC_DOUBLE,
+                Collections.singletonList(
+                    DoublePoint.create(
+                        testClock.now() - SECOND_NANOS,
+                        testClock.now(),
+                        Labels.of("k", "v"),
+                        12.1d))));
+    testClock.advanceNanos(SECOND_NANOS);
+    assertThat(observer.collectAll())
+        .containsExactly(
+            MetricData.create(
+                RESOURCE,
+                INSTRUMENTATION_LIBRARY_INFO,
+                "testObserver",
+                "",
+                "1",
+                MetricData.Type.MONOTONIC_DOUBLE,
+                Collections.singletonList(
+                    DoublePoint.create(
+                        testClock.now() - SECOND_NANOS,
+                        testClock.now(),
+                        Labels.of("k", "v"),
+                        12.1d))));
+  }
 }

@@ -13,4 +13,5 @@ public enum InstrumentType {
   SUM_OBSERVER,
   UP_DOWN_SUM_OBSERVER,
   VALUE_OBSERVER,
+  BATCH_OBSERVER
 }

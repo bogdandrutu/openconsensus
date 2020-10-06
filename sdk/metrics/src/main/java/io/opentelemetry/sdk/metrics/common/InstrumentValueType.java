@@ -9,4 +9,5 @@ package io.opentelemetry.sdk.metrics.common;
 public enum InstrumentValueType {
   LONG,
   DOUBLE,
+  BATCH_OBSERVER
 }

@@ -105,4 +105,57 @@ class LongUpDownSumObserverSdkTest {
                         Labels.of("k", "v"),
                         12))));
   }
+
+  @Test
+  void collectMetrics_Observation() {
+    LongUpDownSumObserverSdk longUpDownSumObserver =
+        testSdk
+            .longUpDownSumObserverBuilder("testObserver")
+            .setDescription("My own LongSumObserver")
+            .setUnit("ms")
+            .build();
+    assertThat(longUpDownSumObserver.observation(10)).isEqualTo(longUpDownSumObserver);
+  }
+
+  @Test
+  void collectMetrics_WithOneObservation() {
+    LongUpDownSumObserverSdk longUpDownSumObserver =
+        testSdk.longUpDownSumObserverBuilder("testObserver").build();
+    BatchObserverSdk observer = testSdk.newBatchObserver("observer");
+    observer.setFunction(
+        result -> result.observe(Labels.of("k", "v"), longUpDownSumObserver.observation(12)));
+
+    testClock.advanceNanos(SECOND_NANOS);
+    assertThat(observer.collectAll())
+        .containsExactly(
+            MetricData.create(
+                RESOURCE,
+                INSTRUMENTATION_LIBRARY_INFO,
+                "testObserver",
+                "",
+                "1",
+                MetricData.Type.NON_MONOTONIC_LONG,
+                Collections.singletonList(
+                    LongPoint.create(
+                        testClock.now() - SECOND_NANOS,
+                        testClock.now(),
+                        Labels.of("k", "v"),
+                        12))));
+    testClock.advanceNanos(SECOND_NANOS);
+    assertThat(observer.collectAll())
+        .containsExactly(
+            MetricData.create(
+                RESOURCE,
+                INSTRUMENTATION_LIBRARY_INFO,
+                "testObserver",
+                "",
+                "1",
+                MetricData.Type.NON_MONOTONIC_LONG,
+                Collections.singletonList(
+                    LongPoint.create(
+                        testClock.now() - SECOND_NANOS,
+                        testClock.now(),
+                        Labels.of("k", "v"),
+                        12))));
+  }
 }

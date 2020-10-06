@@ -60,4 +60,14 @@ public interface AsynchronousInstrument<R extends Result> extends Instrument {
   interface DoubleResult extends Result {
     void observe(double value, Labels labels);
   }
+
+  interface Observation {}
+
+  interface LongObservation {
+    Observation observation(long observation);
+  }
+
+  interface DoubleObservation {
+    Observation observation(double observation);
+  }
 }

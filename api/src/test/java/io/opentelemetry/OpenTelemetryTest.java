@@ -16,6 +16,7 @@ import io.opentelemetry.baggage.spi.BaggageManagerFactory;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.DefaultContextPropagators;
+import io.opentelemetry.metrics.BatchObserver;
 import io.opentelemetry.metrics.BatchRecorder;
 import io.opentelemetry.metrics.DefaultMeterProvider;
 import io.opentelemetry.metrics.DoubleCounter;
@@ -369,6 +370,11 @@ class OpenTelemetryTest {
     @Nullable
     @Override
     public BatchRecorder newBatchRecorder(String... keyValuePairs) {
+      return null;
+    }
+
+    @Override
+    public BatchObserver newBatchObserver(String name) {
       return null;
     }
 
