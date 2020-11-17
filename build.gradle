@@ -303,6 +303,7 @@ configure(opentelemetryProjects) {
         libraries = [
                 auto_value              : "com.google.auto.value:auto-value:${autoValueVersion}",
                 auto_value_annotation   : "com.google.auto.value:auto-value-annotations:${autoValueVersion}",
+                ddsketch                : "com.datadoghq:sketches-java:0.3.0",
                 disruptor               : "com.lmax:disruptor:3.4.2",
                 errorprone_annotation   : "com.google.errorprone:error_prone_annotations:${errorProneVersion}",
                 errorprone_core         : "com.google.errorprone:error_prone_core:${errorProneVersion}",

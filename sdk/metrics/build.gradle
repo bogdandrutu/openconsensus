@@ -14,6 +14,7 @@ dependencies {
     api project(':opentelemetry-api'),
             project(':opentelemetry-sdk-common')
 
+    implementation libraries.ddsketch
     implementation libraries.guava
 
     annotationProcessor libraries.auto_value

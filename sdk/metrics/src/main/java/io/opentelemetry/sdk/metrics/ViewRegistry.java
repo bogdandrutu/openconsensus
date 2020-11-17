@@ -64,6 +64,8 @@ class ViewRegistry {
         return Aggregations.sum();
       case VALUE_RECORDER:
         return Aggregations.minMaxSumCount();
+        // TODO allow selection of ddSketch:
+        //        return Aggregations.ddSketch();
       case VALUE_OBSERVER:
       case SUM_OBSERVER:
       case UP_DOWN_SUM_OBSERVER:
