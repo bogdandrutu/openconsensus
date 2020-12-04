@@ -6,11 +6,13 @@
 package io.opentelemetry.sdk.metrics;
 
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.batch.BatchObserverContext;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 /** {@link MeterSdk} is SDK implementation of {@link Meter}. */
 final class MeterSdk implements Meter {
@@ -100,6 +102,9 @@ final class MeterSdk implements Meter {
   public BatchRecorderSdk newBatchRecorder(String... keyValuePairs) {
     return new BatchRecorderSdk(keyValuePairs);
   }
+
+  @Override
+  public void newBatchObserver(Consumer<BatchObserverContext> batchObserverContextConsumer) {}
 
   /** Collects all the metric recordings that changed since the previous call. */
   Collection<MetricData> collectAll() {

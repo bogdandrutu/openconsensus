@@ -8,7 +8,11 @@ package io.opentelemetry.api.metrics;
 import io.opentelemetry.api.common.Labels;
 import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.api.internal.Utils;
+import io.opentelemetry.api.metrics.batch.BatchObserverContext;
+import io.opentelemetry.api.metrics.batch.DoubleValueBatchObserver;
+import io.opentelemetry.api.metrics.batch.LongValueBatchObserver;
 import java.util.Objects;
+import java.util.function.Consumer;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -116,6 +120,12 @@ final class DefaultMeter implements Meter {
   public BatchRecorder newBatchRecorder(String... keyValuePairs) {
     Utils.validateLabelPairs(keyValuePairs);
     return NoopBatchRecorder.INSTANCE;
+  }
+
+  @Override
+  public void newBatchObserver(Consumer<BatchObserverContext> context) {
+    Objects.requireNonNull(context, "context");
+    context.accept(NoopBatchObserverContext.INSTANCE);
   }
 
   private DefaultMeter() {}
@@ -656,6 +666,78 @@ final class DefaultMeter implements Meter {
 
     @Override
     public void record() {}
+  }
+
+  /** No-op implementation of {@link BatchObserverContext} interface. */
+  private enum NoopBatchObserverContext implements BatchObserverContext {
+    INSTANCE;
+
+    @Override
+    public DoubleValueBatchObserver.Builder doubleValueObserverBuilder(String name) {
+      Objects.requireNonNull(name, "name");
+      return new NoopDoubleValueBatchObserver.NoopBuilder();
+    }
+
+    @Override
+    public LongValueBatchObserver.Builder longValueObserverBuilder(String name) {
+      Objects.requireNonNull(name, "name");
+      return new NoopLongValueBatchObserver.NoopBuilder();
+    }
+
+    @Override
+    public void registerCallback(Consumer<BatchObserverResult> resultConsumer) {}
+  }
+
+  /** No-op implementation of {@link DoubleValueBatchObserver} interface. */
+  @Immutable
+  private static final class NoopDoubleValueBatchObserver implements DoubleValueBatchObserver {
+
+    private NoopDoubleValueBatchObserver() {}
+
+    @Override
+    public Observation observation(double result) {
+      return null;
+    }
+
+    private static final class NoopBuilder extends NoopAbstractInstrumentBuilder<NoopBuilder>
+        implements Builder {
+
+      @Override
+      protected NoopBuilder getThis() {
+        return this;
+      }
+
+      @Override
+      public DoubleValueBatchObserver build() {
+        return new NoopDoubleValueBatchObserver();
+      }
+    }
+  }
+
+  /** No-op implementation of {@link LongValueBatchObserver} interface. */
+  @Immutable
+  private static final class NoopLongValueBatchObserver implements LongValueBatchObserver {
+
+    private NoopLongValueBatchObserver() {}
+
+    @Override
+    public Observation observation(long result) {
+      return null;
+    }
+
+    private static final class NoopBuilder extends NoopAbstractInstrumentBuilder<NoopBuilder>
+        implements Builder {
+
+      @Override
+      protected NoopBuilder getThis() {
+        return this;
+      }
+
+      @Override
+      public LongValueBatchObserver build() {
+        return new NoopLongValueBatchObserver();
+      }
+    }
   }
 
   private abstract static class NoopAbstractInstrumentBuilder<

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.api.metrics;
 
+import io.opentelemetry.api.metrics.batch.BatchObserverContext;
+import java.util.function.Consumer;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -186,4 +188,13 @@ public interface Meter {
    *     measurements associated with different Measures.
    */
   BatchRecorder newBatchRecorder(String... keyValuePairs);
+
+  /**
+   * Register a new {@link BatchObserverContext} consumer for handling observations of Instruments
+   * in a batch.
+   *
+   * @param batchObserverContextConsumer {@link Consumer} function accepting a {@link
+   *     BatchObserverContext}.
+   */
+  void newBatchObserver(Consumer<BatchObserverContext> batchObserverContextConsumer);
 }
