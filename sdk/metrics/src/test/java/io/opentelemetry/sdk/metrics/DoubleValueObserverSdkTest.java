@@ -41,7 +41,7 @@ class DoubleValueObserverSdkTest {
             .setDescription("My own DoubleValueObserver")
             .setUnit("ms")
             .build();
-    assertThat(doubleValueObserver.collectAll()).isEmpty();
+    assertThat(TestUtils.collectAll(doubleValueObserver)).isEmpty();
   }
 
   @Test
@@ -53,7 +53,7 @@ class DoubleValueObserverSdkTest {
             .setUnit("ms")
             .setUpdater(result -> {})
             .build();
-    assertThat(doubleValueObserver.collectAll()).isEmpty();
+    assertThat(TestUtils.collectAll(doubleValueObserver)).isEmpty();
   }
 
   @Test
@@ -66,7 +66,7 @@ class DoubleValueObserverSdkTest {
             .setUpdater(result -> result.observe(12.1d, Labels.of("k", "v")))
             .build();
     testClock.advanceNanos(SECOND_NANOS);
-    assertThat(doubleValueObserver.collectAll())
+    assertThat(TestUtils.collectAll(doubleValueObserver))
         .containsExactly(
             MetricData.createDoubleGauge(
                 RESOURCE,
@@ -82,7 +82,7 @@ class DoubleValueObserverSdkTest {
                             Labels.of("k", "v"),
                             12.1d)))));
     testClock.advanceNanos(SECOND_NANOS);
-    assertThat(doubleValueObserver.collectAll())
+    assertThat(TestUtils.collectAll(doubleValueObserver))
         .containsExactly(
             MetricData.createDoubleGauge(
                 RESOURCE,

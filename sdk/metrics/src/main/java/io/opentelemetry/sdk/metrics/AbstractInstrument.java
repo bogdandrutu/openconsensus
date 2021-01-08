@@ -31,7 +31,7 @@ abstract class AbstractInstrument implements Instrument {
   /**
    * Collects records from all the entries (labelSet, Bound) that changed since the previous call.
    */
-  abstract List<MetricData> collectAll();
+  abstract void collectAll(List<MetricData> output);
 
   @Override
   public boolean equals(Object o) {

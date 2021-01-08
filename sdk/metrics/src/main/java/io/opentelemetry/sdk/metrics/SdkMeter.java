@@ -99,7 +99,7 @@ final class SdkMeter implements Meter {
     Collection<AbstractInstrument> instruments = instrumentRegistry.getInstruments();
     List<MetricData> result = new ArrayList<>(instruments.size());
     for (AbstractInstrument instrument : instruments) {
-      result.addAll(instrument.collectAll());
+      instrument.collectAll(result);
     }
     return result;
   }

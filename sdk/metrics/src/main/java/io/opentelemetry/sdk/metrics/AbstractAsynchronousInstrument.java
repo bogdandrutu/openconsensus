@@ -19,7 +19,7 @@ abstract class AbstractAsynchronousInstrument extends AbstractInstrument {
   }
 
   @Override
-  public final List<MetricData> collectAll() {
-    return accumulator.collectAll();
+  final void collectAll(List<MetricData> output) {
+    accumulator.collectAll(output);
   }
 }

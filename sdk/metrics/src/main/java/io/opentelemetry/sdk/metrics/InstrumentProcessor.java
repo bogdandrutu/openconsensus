@@ -13,7 +13,6 @@ import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.view.AggregationConfiguration;
 import io.opentelemetry.sdk.resources.Resource;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +23,7 @@ import java.util.Map;
  * batches together {@code Aggregator}s for the similar sets of labels.
  *
  * <p>An entire collection cycle must be protected by a lock. A collection cycle is defined by
- * multiple calls to {@code #batch(...)} followed by one {@link #completeCollectionCycle()};
+ * multiple calls to {@code #batch(...)} followed by one {@code #completeCollectionCycle(...)};
  */
 final class InstrumentProcessor<T> {
   private final InstrumentDescriptor descriptor;
@@ -95,19 +94,20 @@ final class InstrumentProcessor<T> {
   }
 
   /**
-   * Ends the current collection cycle and returns the list of metrics batched in this Batcher.
+   * Ends the current collection cycle and appends the list of metrics batched in this {@code
+   * InstrumentProcessor} to the {@code output}.
    *
    * <p>There may be more than one MetricData in case a multi aggregator is configured.
    *
    * <p>Based on the configured options this method may reset the internal state to produce deltas,
    * or keep the internal state to produce cumulative metrics.
    *
-   * @return the list of metrics batched in this Batcher.
+   * @param output appends the list of metrics batched in this {@code InstrumentProcessor}.
    */
-  List<MetricData> completeCollectionCycle() {
+  void completeCollectionCycle(List<MetricData> output) {
     long epochNanos = clock.now();
     if (accumulationMap.isEmpty()) {
-      return Collections.emptyList();
+      return;
     }
 
     MetricData metricData =
@@ -124,7 +124,9 @@ final class InstrumentProcessor<T> {
       accumulationMap = new HashMap<>();
     }
 
-    return metricData == null ? Collections.emptyList() : Collections.singletonList(metricData);
+    if (metricData != null) {
+      output.add(metricData);
+    }
   }
 
   private static boolean isDelta(MetricData.AggregationTemporality temporality) {

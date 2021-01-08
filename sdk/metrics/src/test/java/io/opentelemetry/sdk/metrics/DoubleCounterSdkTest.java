@@ -58,7 +58,7 @@ class DoubleCounterSdkTest {
             .setDescription("My very own counter")
             .setUnit("ms")
             .build();
-    List<MetricData> metricDataList = doubleCounter.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(doubleCounter);
     assertThat(metricDataList).isEmpty();
   }
 
@@ -72,7 +72,7 @@ class DoubleCounterSdkTest {
             .build();
     testClock.advanceNanos(SECOND_NANOS);
     doubleCounter.add(12.1d, Labels.empty());
-    List<MetricData> metricDataList = doubleCounter.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(doubleCounter);
     assertThat(metricDataList).hasSize(1);
     MetricData metricData = metricDataList.get(0);
     assertThat(metricData.getResource()).isEqualTo(RESOURCE);
@@ -97,10 +97,10 @@ class DoubleCounterSdkTest {
     doubleCounter.add(12.1d, Labels.empty());
     doubleCounter1.add(12.1d);
 
-    assertThat(doubleCounter.collectAll().get(0))
+    assertThat(TestUtils.collectAll(doubleCounter).get(0))
         .usingRecursiveComparison(
             RecursiveComparisonConfiguration.builder().withIgnoredFields("name").build())
-        .isEqualTo(doubleCounter1.collectAll().get(0));
+        .isEqualTo(TestUtils.collectAll(doubleCounter1).get(0));
   }
 
   @Test
@@ -119,7 +119,7 @@ class DoubleCounterSdkTest {
       doubleCounter.add(111.1d, Labels.of("K", "V"));
 
       long firstCollect = testClock.now();
-      List<MetricData> metricDataList = doubleCounter.collectAll();
+      List<MetricData> metricDataList = TestUtils.collectAll(doubleCounter);
       assertThat(metricDataList).hasSize(1);
       MetricData metricData = metricDataList.get(0);
       assertThat(metricData.getDoubleSumData().getPoints())
@@ -133,7 +133,7 @@ class DoubleCounterSdkTest {
       doubleCounter.add(11d, Labels.empty());
 
       long secondCollect = testClock.now();
-      metricDataList = doubleCounter.collectAll();
+      metricDataList = TestUtils.collectAll(doubleCounter);
       assertThat(metricDataList).hasSize(1);
       metricData = metricDataList.get(0);
       assertThat(metricData.getDoubleSumData().getPoints())
@@ -178,7 +178,7 @@ class DoubleCounterSdkTest {
     }
 
     stressTestBuilder.build().run();
-    List<MetricData> metricDataList = doubleCounter.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(doubleCounter);
     assertThat(metricDataList).hasSize(1);
     assertThat(metricDataList.get(0).getDoubleSumData().getPoints())
         .containsExactly(
@@ -207,7 +207,7 @@ class DoubleCounterSdkTest {
     }
 
     stressTestBuilder.build().run();
-    List<MetricData> metricDataList = doubleCounter.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(doubleCounter);
     assertThat(metricDataList).hasSize(1);
     assertThat(metricDataList.get(0).getDoubleSumData().getPoints())
         .containsExactly(

@@ -66,7 +66,7 @@ class DoubleValueRecorderSdkTest {
     doubleMeasure.bind(Labels.of("key", "value"));
     testClock.advanceNanos(SECOND_NANOS);
 
-    List<MetricData> metricDataList = doubleMeasure.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(doubleMeasure);
     assertThat(metricDataList).isEmpty();
   }
 
@@ -76,7 +76,7 @@ class DoubleValueRecorderSdkTest {
         testSdk.doubleValueRecorderBuilder("testRecorder").build();
     testClock.advanceNanos(SECOND_NANOS);
     doubleMeasure.record(12.1d, Labels.empty());
-    List<MetricData> metricDataList = doubleMeasure.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(doubleMeasure);
     assertThat(metricDataList)
         .containsExactly(
             MetricData.createDoubleSummary(
@@ -106,10 +106,10 @@ class DoubleValueRecorderSdkTest {
     doubleMeasure.record(12.1d, Labels.empty());
     doubleMeasure1.record(12.1d);
 
-    assertThat(doubleMeasure.collectAll().get(0))
+    assertThat(TestUtils.collectAll(doubleMeasure).get(0))
         .usingRecursiveComparison(
             RecursiveComparisonConfiguration.builder().withIgnoredFields("name").build())
-        .isEqualTo(doubleMeasure1.collectAll().get(0));
+        .isEqualTo(TestUtils.collectAll(doubleMeasure1).get(0));
   }
 
   @Test
@@ -129,7 +129,7 @@ class DoubleValueRecorderSdkTest {
       doubleMeasure.record(-121.5d, Labels.of("K", "V"));
 
       long firstCollect = testClock.now();
-      List<MetricData> metricDataList = doubleMeasure.collectAll();
+      List<MetricData> metricDataList = TestUtils.collectAll(doubleMeasure);
       assertThat(metricDataList).hasSize(1);
       MetricData metricData = metricDataList.get(0);
       assertThat(metricData.getDoubleSummaryData().getPoints())
@@ -155,7 +155,7 @@ class DoubleValueRecorderSdkTest {
       doubleMeasure.record(17d, Labels.empty());
 
       long secondCollect = testClock.now();
-      metricDataList = doubleMeasure.collectAll();
+      metricDataList = TestUtils.collectAll(doubleMeasure);
       assertThat(metricDataList).hasSize(1);
       metricData = metricDataList.get(0);
       assertThat(metricData.getDoubleSummaryData().getPoints())
@@ -199,7 +199,7 @@ class DoubleValueRecorderSdkTest {
     }
 
     stressTestBuilder.build().run();
-    List<MetricData> metricDataList = doubleMeasure.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(doubleMeasure);
     assertThat(metricDataList).hasSize(1);
     assertThat(metricDataList.get(0).getDoubleSummaryData().getPoints())
         .containsExactly(
@@ -238,7 +238,7 @@ class DoubleValueRecorderSdkTest {
     }
 
     stressTestBuilder.build().run();
-    List<MetricData> metricDataList = doubleMeasure.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(doubleMeasure);
     assertThat(metricDataList).hasSize(1);
     assertThat(metricDataList.get(0).getDoubleSummaryData().getPoints())
         .containsExactly(

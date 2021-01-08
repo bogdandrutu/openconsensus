@@ -40,7 +40,7 @@ class DoubleUpDownSumObserverSdkTest {
             .setDescription("My own DoubleUpDownSumObserver")
             .setUnit("ms")
             .build();
-    assertThat(doubleUpDownSumObserver.collectAll()).isEmpty();
+    assertThat(TestUtils.collectAll(doubleUpDownSumObserver)).isEmpty();
   }
 
   @Test
@@ -52,7 +52,7 @@ class DoubleUpDownSumObserverSdkTest {
             .setUnit("ms")
             .setUpdater(result -> {})
             .build();
-    assertThat(doubleUpDownSumObserver.collectAll()).isEmpty();
+    assertThat(TestUtils.collectAll(doubleUpDownSumObserver)).isEmpty();
   }
 
   @Test
@@ -63,7 +63,7 @@ class DoubleUpDownSumObserverSdkTest {
             .setUpdater(result -> result.observe(12.1d, Labels.of("k", "v")))
             .build();
     testClock.advanceNanos(SECOND_NANOS);
-    assertThat(doubleUpDownSumObserver.collectAll())
+    assertThat(TestUtils.collectAll(doubleUpDownSumObserver))
         .containsExactly(
             MetricData.createDoubleSum(
                 RESOURCE,
@@ -81,7 +81,7 @@ class DoubleUpDownSumObserverSdkTest {
                             Labels.of("k", "v"),
                             12.1d)))));
     testClock.advanceNanos(SECOND_NANOS);
-    assertThat(doubleUpDownSumObserver.collectAll())
+    assertThat(TestUtils.collectAll(doubleUpDownSumObserver))
         .containsExactly(
             MetricData.createDoubleSum(
                 RESOURCE,

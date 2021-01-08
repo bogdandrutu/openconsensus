@@ -67,7 +67,7 @@ class LongValueRecorderSdkTest {
     longMeasure.bind(Labels.of("key", "value"));
     testClock.advanceNanos(SECOND_NANOS);
 
-    List<MetricData> metricDataList = longMeasure.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(longMeasure);
     assertThat(metricDataList).isEmpty();
   }
 
@@ -81,7 +81,7 @@ class LongValueRecorderSdkTest {
             .build();
     testClock.advanceNanos(SECOND_NANOS);
     longMeasure.record(12, Labels.empty());
-    List<MetricData> metricDataList = longMeasure.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(longMeasure);
     assertThat(metricDataList)
         .containsExactly(
             MetricData.createDoubleSummary(
@@ -109,10 +109,10 @@ class LongValueRecorderSdkTest {
     longMeasure.record(12, Labels.empty());
     longMeasure1.record(12);
 
-    assertThat(longMeasure.collectAll().get(0))
+    assertThat(TestUtils.collectAll(longMeasure).get(0))
         .usingRecursiveComparison(
             RecursiveComparisonConfiguration.builder().withIgnoredFields("name").build())
-        .isEqualTo(longMeasure1.collectAll().get(0));
+        .isEqualTo(TestUtils.collectAll(longMeasure1).get(0));
   }
 
   @Test
@@ -131,7 +131,7 @@ class LongValueRecorderSdkTest {
       longMeasure.record(-121, Labels.of("K", "V"));
 
       long firstCollect = testClock.now();
-      List<MetricData> metricDataList = longMeasure.collectAll();
+      List<MetricData> metricDataList = TestUtils.collectAll(longMeasure);
       assertThat(metricDataList).hasSize(1);
       MetricData metricData = metricDataList.get(0);
       assertThat(metricData.getDoubleSummaryData().getPoints())
@@ -152,7 +152,7 @@ class LongValueRecorderSdkTest {
       longMeasure.record(17, Labels.empty());
 
       long secondCollect = testClock.now();
-      metricDataList = longMeasure.collectAll();
+      metricDataList = TestUtils.collectAll(longMeasure);
       assertThat(metricDataList).hasSize(1);
       metricData = metricDataList.get(0);
       assertThat(metricData.getDoubleSummaryData().getPoints())
@@ -199,7 +199,7 @@ class LongValueRecorderSdkTest {
     }
 
     stressTestBuilder.build().run();
-    List<MetricData> metricDataList = longMeasure.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(longMeasure);
     assertThat(metricDataList).hasSize(1);
     assertThat(metricDataList.get(0).getDoubleSummaryData().getPoints())
         .containsExactly(
@@ -239,7 +239,7 @@ class LongValueRecorderSdkTest {
     }
 
     stressTestBuilder.build().run();
-    List<MetricData> metricDataList = longMeasure.collectAll();
+    List<MetricData> metricDataList = TestUtils.collectAll(longMeasure);
     assertThat(metricDataList).hasSize(1);
     assertThat(metricDataList.get(0).getDoubleSummaryData().getPoints())
         .containsExactly(

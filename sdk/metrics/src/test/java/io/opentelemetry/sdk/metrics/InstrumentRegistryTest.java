@@ -13,7 +13,6 @@ import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
 import io.opentelemetry.sdk.metrics.common.InstrumentType;
 import io.opentelemetry.sdk.metrics.common.InstrumentValueType;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -76,25 +75,12 @@ class InstrumentRegistryTest {
         .hasMessage("Instrument with same name and different descriptor already created.");
   }
 
-  private static final class TestInstrument extends AbstractInstrument {
-    TestInstrument(InstrumentDescriptor descriptor) {
-      super(descriptor);
-    }
-
-    @Override
-    List<MetricData> collectAll() {
-      return Collections.emptyList();
-    }
-  }
-
   private static final class OtherTestInstrument extends AbstractInstrument {
     OtherTestInstrument(InstrumentDescriptor descriptor) {
       super(descriptor);
     }
 
     @Override
-    List<MetricData> collectAll() {
-      return Collections.emptyList();
-    }
+    void collectAll(List<MetricData> output) {}
   }
 }

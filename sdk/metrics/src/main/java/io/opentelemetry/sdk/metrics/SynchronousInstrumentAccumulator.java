@@ -58,8 +58,10 @@ final class SynchronousInstrumentAccumulator<T> {
   /**
    * Collects records from all the entries (labelSet, Bound) that changed since the last collect()
    * call.
+   *
+   * @param output appends the result to this list.
    */
-  public final List<MetricData> collectAll() {
+  void collectAll(List<MetricData> output) {
     collectLock.lock();
     try {
       for (Map.Entry<Labels, AggregatorHandle<T>> entry : aggregatorLabels.entrySet()) {
@@ -75,7 +77,7 @@ final class SynchronousInstrumentAccumulator<T> {
         }
         instrumentProcessor.batch(entry.getKey(), accumulation);
       }
-      return instrumentProcessor.completeCollectionCycle();
+      instrumentProcessor.completeCollectionCycle(output);
     } finally {
       collectLock.unlock();
     }

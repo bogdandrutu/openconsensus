@@ -10,13 +10,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.internal.StringUtils;
-import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
 import io.opentelemetry.sdk.metrics.common.InstrumentType;
 import io.opentelemetry.sdk.metrics.common.InstrumentValueType;
-import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link AbstractInstrument.Builder}. */
@@ -119,17 +115,6 @@ class AbstractInstrumentBuilderTest {
     @Override
     public TestInstrument build() {
       return new TestInstrument(buildDescriptor());
-    }
-  }
-
-  private static final class TestInstrument extends AbstractInstrument {
-    TestInstrument(InstrumentDescriptor descriptor) {
-      super(descriptor);
-    }
-
-    @Override
-    List<MetricData> collectAll() {
-      return Collections.emptyList();
     }
   }
 }

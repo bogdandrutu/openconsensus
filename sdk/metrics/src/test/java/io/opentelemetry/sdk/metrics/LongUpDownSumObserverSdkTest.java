@@ -40,7 +40,7 @@ class LongUpDownSumObserverSdkTest {
             .setDescription("My own LongUpDownSumObserver")
             .setUnit("ms")
             .build();
-    assertThat(longUpDownSumObserver.collectAll()).isEmpty();
+    assertThat(TestUtils.collectAll(longUpDownSumObserver)).isEmpty();
   }
 
   @Test
@@ -52,7 +52,7 @@ class LongUpDownSumObserverSdkTest {
             .setUnit("ms")
             .setUpdater(result -> {})
             .build();
-    assertThat(longUpDownSumObserver.collectAll()).isEmpty();
+    assertThat(TestUtils.collectAll(longUpDownSumObserver)).isEmpty();
   }
 
   @Test
@@ -63,7 +63,7 @@ class LongUpDownSumObserverSdkTest {
             .setUpdater(result -> result.observe(12, Labels.of("k", "v")))
             .build();
     testClock.advanceNanos(SECOND_NANOS);
-    assertThat(longUpDownSumObserver.collectAll())
+    assertThat(TestUtils.collectAll(longUpDownSumObserver))
         .containsExactly(
             MetricData.createLongSum(
                 RESOURCE,
@@ -81,7 +81,7 @@ class LongUpDownSumObserverSdkTest {
                             Labels.of("k", "v"),
                             12)))));
     testClock.advanceNanos(SECOND_NANOS);
-    assertThat(longUpDownSumObserver.collectAll())
+    assertThat(TestUtils.collectAll(longUpDownSumObserver))
         .containsExactly(
             MetricData.createLongSum(
                 RESOURCE,

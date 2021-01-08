@@ -40,7 +40,7 @@ class LongValueObserverSdkTest {
             .setDescription("My own LongValueObserver")
             .setUnit("ms")
             .build();
-    assertThat(longValueObserver.collectAll()).isEmpty();
+    assertThat(TestUtils.collectAll(longValueObserver)).isEmpty();
   }
 
   @Test
@@ -52,7 +52,7 @@ class LongValueObserverSdkTest {
             .setUnit("ms")
             .setUpdater(result -> {})
             .build();
-    assertThat(longValueObserver.collectAll()).isEmpty();
+    assertThat(TestUtils.collectAll(longValueObserver)).isEmpty();
   }
 
   @Test
@@ -63,7 +63,7 @@ class LongValueObserverSdkTest {
             .setUpdater(result -> result.observe(12, Labels.of("k", "v")))
             .build();
     testClock.advanceNanos(SECOND_NANOS);
-    assertThat(longValueObserver.collectAll())
+    assertThat(TestUtils.collectAll(longValueObserver))
         .containsExactly(
             MetricData.createLongGauge(
                 RESOURCE,
@@ -79,7 +79,7 @@ class LongValueObserverSdkTest {
                             Labels.of("k", "v"),
                             12)))));
     testClock.advanceNanos(SECOND_NANOS);
-    assertThat(longValueObserver.collectAll())
+    assertThat(TestUtils.collectAll(longValueObserver))
         .containsExactly(
             MetricData.createLongGauge(
                 RESOURCE,
