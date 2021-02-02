@@ -38,7 +38,7 @@ class PrometheusTest {
     GlobalMetricsProvider.get()
         .get("test")
         .longValueObserverBuilder("test")
-        .setUpdater(result -> result.observe(2, Labels.empty()))
+        .setUpdater(result -> result.accept(2L, Labels.empty()))
         .build();
 
     WebClient client = WebClient.of("http://127.0.0.1:" + port);

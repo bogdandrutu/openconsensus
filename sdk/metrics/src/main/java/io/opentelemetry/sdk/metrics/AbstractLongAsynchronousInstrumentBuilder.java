@@ -5,10 +5,11 @@
 
 package io.opentelemetry.sdk.metrics;
 
-import io.opentelemetry.api.metrics.AsynchronousInstrument;
+import io.opentelemetry.api.common.Labels;
 import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
 import io.opentelemetry.sdk.metrics.common.InstrumentType;
 import io.opentelemetry.sdk.metrics.common.InstrumentValueType;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -17,7 +18,7 @@ abstract class AbstractLongAsynchronousInstrumentBuilder<B extends AbstractInstr
     extends AbstractInstrument.Builder<B> {
   private final MeterProviderSharedState meterProviderSharedState;
   private final MeterSharedState meterSharedState;
-  @Nullable private Consumer<AsynchronousInstrument.LongResult> updater;
+  @Nullable private Consumer<BiConsumer<Long, Labels>> updater;
 
   AbstractLongAsynchronousInstrumentBuilder(
       String name,
@@ -30,7 +31,7 @@ abstract class AbstractLongAsynchronousInstrumentBuilder<B extends AbstractInstr
     this.meterSharedState = meterSharedState;
   }
 
-  public B setUpdater(Consumer<AsynchronousInstrument.LongResult> updater) {
+  public B setUpdater(Consumer<BiConsumer<Long, Labels>> updater) {
     this.updater = updater;
     return getThis();
   }

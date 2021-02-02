@@ -22,25 +22,21 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * <pre>{@code
  * class YourClass {
- *
+ *   private static final USED_LABELS = Labels.of("state", "user")
+ *   private static final FREE_LABELS = Labels.of("state", "idle")
  *   private static final Meter meter = OpenTelemetry.getMeterProvider().get("my_library_name");
- *   private static final DoubleUpDownSumObserver memoryObserver =
- *       meter.
- *           .doubleUpDownSumObserverBuilder("memory_usage")
- *           .setDescription("System memory usage")
- *           .setUnit("by")
- *           .build();
  *
  *   void init() {
- *     memoryObserver.setUpdater(
- *         new DoubleUpDownSumObserver.Callback<DoubleResult>() {
- *          {@literal @}Override
- *           public void update(DoubleResult result) {
- *             // Get system memory usage
- *             result.observe(memoryUsed, "state", "used");
- *             result.observe(memoryFree, "state", "free");
- *           }
- *         });
+ *     meter.
+ *         .doubleUpDownSumObserverBuilder("memory_usage")
+ *         .setDescription("System memory usage")
+ *         .setUnit("by")
+ *         .setUpdater(result -> {
+ *           // Get system memory usage
+ *           result.accept(memoryUsed, USED_LABELS);
+ *           result.accept(memoryFree, FREE_LABELS);
+ *         })
+ *         .build();
  *   }
  * }
  * }</pre>

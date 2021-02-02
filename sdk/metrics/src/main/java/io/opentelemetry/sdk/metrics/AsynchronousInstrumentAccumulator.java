@@ -5,12 +5,13 @@
 
 package io.opentelemetry.sdk.metrics;
 
-import io.opentelemetry.api.metrics.AsynchronousInstrument;
+import io.opentelemetry.api.common.Labels;
 import io.opentelemetry.sdk.metrics.aggregator.Aggregator;
 import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
@@ -23,7 +24,7 @@ final class AsynchronousInstrumentAccumulator extends AbstractAccumulator {
       MeterProviderSharedState meterProviderSharedState,
       MeterSharedState meterSharedState,
       InstrumentDescriptor descriptor,
-      @Nullable Consumer<AsynchronousInstrument.DoubleResult> metricUpdater) {
+      @Nullable Consumer<BiConsumer<Double, Labels>> metricUpdater) {
     Aggregator<T> aggregator =
         getAggregator(meterProviderSharedState, meterSharedState, descriptor);
     InstrumentProcessor<T> instrumentProcessor =
@@ -33,7 +34,7 @@ final class AsynchronousInstrumentAccumulator extends AbstractAccumulator {
       return new AsynchronousInstrumentAccumulator(instrumentProcessor, () -> {});
     }
 
-    AsynchronousInstrument.DoubleResult result =
+    BiConsumer<Double, Labels> result =
         (value, labels) -> instrumentProcessor.batch(labels, aggregator.accumulateDouble(value));
 
     return new AsynchronousInstrumentAccumulator(
@@ -44,7 +45,7 @@ final class AsynchronousInstrumentAccumulator extends AbstractAccumulator {
       MeterProviderSharedState meterProviderSharedState,
       MeterSharedState meterSharedState,
       InstrumentDescriptor descriptor,
-      @Nullable Consumer<AsynchronousInstrument.LongResult> metricUpdater) {
+      @Nullable Consumer<BiConsumer<Long, Labels>> metricUpdater) {
     Aggregator<T> aggregator =
         getAggregator(meterProviderSharedState, meterSharedState, descriptor);
     InstrumentProcessor<T> instrumentProcessor =
@@ -54,7 +55,7 @@ final class AsynchronousInstrumentAccumulator extends AbstractAccumulator {
       return new AsynchronousInstrumentAccumulator(instrumentProcessor, () -> {});
     }
 
-    AsynchronousInstrument.LongResult result =
+    BiConsumer<Long, Labels> result =
         (value, labels) -> instrumentProcessor.batch(labels, aggregator.accumulateLong(value));
 
     return new AsynchronousInstrumentAccumulator(

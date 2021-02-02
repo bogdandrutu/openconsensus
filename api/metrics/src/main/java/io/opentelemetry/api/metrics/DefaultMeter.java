@@ -9,6 +9,7 @@ import io.opentelemetry.api.common.Labels;
 import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.api.internal.Utils;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
@@ -430,7 +431,7 @@ final class DefaultMeter implements Meter {
       }
 
       @Override
-      public DoubleSumObserverBuilder setUpdater(Consumer<DoubleResult> updater) {
+      public DoubleSumObserverBuilder setUpdater(Consumer<BiConsumer<Double, Labels>> updater) {
         Objects.requireNonNull(updater, "callback");
         return this;
       }
@@ -457,7 +458,7 @@ final class DefaultMeter implements Meter {
       }
 
       @Override
-      public NoopBuilder setUpdater(Consumer<LongResult> updater) {
+      public NoopBuilder setUpdater(Consumer<BiConsumer<Long, Labels>> updater) {
         Objects.requireNonNull(updater, "callback");
         return this;
       }
@@ -484,7 +485,8 @@ final class DefaultMeter implements Meter {
       }
 
       @Override
-      public DoubleUpDownSumObserverBuilder setUpdater(Consumer<DoubleResult> updater) {
+      public DoubleUpDownSumObserverBuilder setUpdater(
+          Consumer<BiConsumer<Double, Labels>> updater) {
         Objects.requireNonNull(updater, "callback");
         return this;
       }
@@ -511,7 +513,7 @@ final class DefaultMeter implements Meter {
       }
 
       @Override
-      public LongUpDownSumObserverBuilder setUpdater(Consumer<LongResult> updater) {
+      public LongUpDownSumObserverBuilder setUpdater(Consumer<BiConsumer<Long, Labels>> updater) {
         Objects.requireNonNull(updater, "callback");
         return this;
       }
@@ -538,7 +540,7 @@ final class DefaultMeter implements Meter {
       }
 
       @Override
-      public DoubleValueObserverBuilder setUpdater(Consumer<DoubleResult> updater) {
+      public DoubleValueObserverBuilder setUpdater(Consumer<BiConsumer<Double, Labels>> updater) {
         Objects.requireNonNull(updater, "callback");
         return this;
       }
@@ -565,7 +567,7 @@ final class DefaultMeter implements Meter {
       }
 
       @Override
-      public LongValueObserverBuilder setUpdater(Consumer<LongResult> updater) {
+      public LongValueObserverBuilder setUpdater(Consumer<BiConsumer<Long, Labels>> updater) {
         Objects.requireNonNull(updater, "callback");
         return this;
       }

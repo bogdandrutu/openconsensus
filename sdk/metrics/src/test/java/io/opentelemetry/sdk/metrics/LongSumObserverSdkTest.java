@@ -57,7 +57,7 @@ class LongSumObserverSdkTest {
   void collectMetrics_WithOneRecord() {
     sdkMeter
         .longSumObserverBuilder("testObserver")
-        .setUpdater(result -> result.observe(12, Labels.of("k", "v")))
+        .setUpdater(result -> result.accept(12L, Labels.of("k", "v")))
         .build();
     testClock.advanceNanos(SECOND_NANOS);
     assertThat(sdkMeterProvider.collectAllMetrics())

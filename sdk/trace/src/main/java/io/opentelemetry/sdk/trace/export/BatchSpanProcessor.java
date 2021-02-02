@@ -149,8 +149,8 @@ public final class BatchSpanProcessor implements SpanProcessor {
           .setUnit("1")
           .setUpdater(
               result ->
-                  result.observe(
-                      queue.size(),
+                  result.accept(
+                      (long) queue.size(),
                       Labels.of(SPAN_PROCESSOR_TYPE_LABEL, SPAN_PROCESSOR_TYPE_VALUE)))
           .build();
       LongCounter processedSpansCounter =

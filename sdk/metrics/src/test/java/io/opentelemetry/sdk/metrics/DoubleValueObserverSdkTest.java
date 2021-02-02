@@ -58,7 +58,7 @@ class DoubleValueObserverSdkTest {
         .doubleValueObserverBuilder("testObserver")
         .setDescription("My own DoubleValueObserver")
         .setUnit("ms")
-        .setUpdater(result -> result.observe(12.1d, Labels.of("k", "v")))
+        .setUpdater(result -> result.accept(12.1d, Labels.of("k", "v")))
         .build();
     testClock.advanceNanos(SECOND_NANOS);
     assertThat(sdkMeterProvider.collectAllMetrics())

@@ -9,8 +9,7 @@ import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * {@code ValueObserver} is the asynchronous instrument corresponding to ValueRecorder, used to
- * capture values that are treated as individual observations, recorded with the observe(value)
- * method.
+ * capture values that are treated as individual observations.
  *
  * <p>A {@code ValueObserver} is a good choice in situations where a measurement is expensive to
  * compute, such that it would be wasteful to compute on every request.
@@ -21,22 +20,17 @@ import javax.annotation.concurrent.ThreadSafe;
  * class YourClass {
  *
  *   private static final Meter meter = OpenTelemetry.getMeterProvider().get("my_library_name");
- *   private static final LongValueObserver cpuObserver =
- *       meter.
- *           .longValueObserverBuilder("cpu_fan_speed")
- *           .setDescription("System CPU fan speed")
- *           .setUnit("ms")
- *           .build();
  *
  *   void init() {
- *     cpuObserver.setUpdater(
- *         new LongValueObserver.Callback<LongResult>() {
- *          {@literal @}Override
- *           public void update(LongResult result) {
- *             // Get system cpu fan speed
- *             result.observe(cpuFanSpeed);
- *           }
- *         });
+ *     meter.
+ *         .longValueObserverBuilder("cpu_fan_speed")
+ *         .setDescription("System CPU fan speed")
+ *         .setUnit("ms")
+ *         .setUpdater(result -> {
+ *           // Get system cpu fan speed
+ *           result.accept(cpuFanSpeed, Labels.empty());
+ *         })
+ *         .build();
  *   }
  * }
  * }</pre>

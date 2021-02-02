@@ -5,11 +5,13 @@
 
 package io.opentelemetry.api.metrics;
 
+import io.opentelemetry.api.common.Labels;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /** Builder class for {@link DoubleUpDownSumObserver}. */
 public interface DoubleUpDownSumObserverBuilder
-    extends AsynchronousInstrumentBuilder<AsynchronousInstrument.DoubleResult> {
+    extends AsynchronousInstrumentBuilder<BiConsumer<Double, Labels>> {
   @Override
   DoubleUpDownSumObserverBuilder setDescription(String description);
 
@@ -17,7 +19,7 @@ public interface DoubleUpDownSumObserverBuilder
   DoubleUpDownSumObserverBuilder setUnit(String unit);
 
   @Override
-  DoubleUpDownSumObserverBuilder setUpdater(Consumer<AsynchronousInstrument.DoubleResult> updater);
+  DoubleUpDownSumObserverBuilder setUpdater(Consumer<BiConsumer<Double, Labels>> updater);
 
   @Override
   DoubleUpDownSumObserver build();

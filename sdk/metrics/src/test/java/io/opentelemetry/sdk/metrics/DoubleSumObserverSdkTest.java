@@ -59,7 +59,7 @@ class DoubleSumObserverSdkTest {
         .doubleSumObserverBuilder("testObserver")
         .setDescription("My own DoubleSumObserver")
         .setUnit("ms")
-        .setUpdater(result -> result.observe(12.1d, Labels.of("k", "v")))
+        .setUpdater(result -> result.accept(12.1d, Labels.of("k", "v")))
         .build();
     testClock.advanceNanos(SECOND_NANOS);
     assertThat(sdkMeterProvider.collectAllMetrics())

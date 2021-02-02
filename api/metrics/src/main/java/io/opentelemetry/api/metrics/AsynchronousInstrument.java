@@ -5,7 +5,6 @@
 
 package io.opentelemetry.api.metrics;
 
-import io.opentelemetry.api.common.Labels;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -18,15 +17,4 @@ import javax.annotation.concurrent.ThreadSafe;
  * kept.
  */
 @ThreadSafe
-public interface AsynchronousInstrument extends Instrument {
-
-  /** The result pass to the updater. */
-  interface LongResult {
-    void observe(long value, Labels labels);
-  }
-
-  /** The result pass to the updater. */
-  interface DoubleResult {
-    void observe(double value, Labels labels);
-  }
-}
+public interface AsynchronousInstrument extends Instrument {}

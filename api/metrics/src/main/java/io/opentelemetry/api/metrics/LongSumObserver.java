@@ -23,24 +23,21 @@ import javax.annotation.concurrent.ThreadSafe;
  * <pre>{@code
  * class YourClass {
  *
+ *   private static final IDLE_LABELS = Labels.of("state", "idle")
+ *   private static final USER_LABELS = Labels.of("state", "user")
  *   private static final Meter meter = OpenTelemetry.getMeterProvider().get("my_library_name");
- *   private static final LongSumObserver cpuObserver =
- *       meter.
- *           .longSumObserverBuilder("cpu_time")
- *           .setDescription("System CPU usage")
- *           .setUnit("ms")
- *           .build();
  *
  *   void init() {
- *     cpuObserver.setUpdater(
- *         new LongSumObserver.Callback<LongResult>() {
- *          {@literal @}Override
- *           public void update(LongResult result) {
- *             // Get system cpu usage
- *             result.observe(cpuIdle, "state", "idle");
- *             result.observe(cpuUser, "state", "user");
- *           }
- *         });
+ *     meter.
+ *         .longSumObserverBuilder("cpu_time")
+ *         .setDescription("System CPU usage")
+ *         .setUnit("ms")
+ *         .setUpdater(result -> {
+ *           // Get system cpu usage
+ *           result.accept(cpuIdle, IDLE_LABELS);
+ *           result.accept(cpuUser, USER_LABELS);
+ *         })
+ *         .build();
  *   }
  * }
  * }</pre>

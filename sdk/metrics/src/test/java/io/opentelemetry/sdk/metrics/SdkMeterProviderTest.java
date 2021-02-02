@@ -388,28 +388,28 @@ public class SdkMeterProviderTest {
   void collectAllAsyncInstruments() {
     sdkMeter
         .longSumObserverBuilder("testLongSumObserver")
-        .setUpdater(longResult -> longResult.observe(10, Labels.empty()))
+        .setUpdater(longResult -> longResult.accept(10L, Labels.empty()))
         .build();
     sdkMeter
         .longUpDownSumObserverBuilder("testLongUpDownSumObserver")
-        .setUpdater(longResult -> longResult.observe(-10, Labels.empty()))
+        .setUpdater(longResult -> longResult.accept(-10L, Labels.empty()))
         .build();
     sdkMeter
         .longValueObserverBuilder("testLongValueObserver")
-        .setUpdater(longResult -> longResult.observe(10, Labels.empty()))
+        .setUpdater(longResult -> longResult.accept(10L, Labels.empty()))
         .build();
 
     sdkMeter
         .doubleSumObserverBuilder("testDoubleSumObserver")
-        .setUpdater(doubleResult -> doubleResult.observe(10.1, Labels.empty()))
+        .setUpdater(doubleResult -> doubleResult.accept(10.1, Labels.empty()))
         .build();
     sdkMeter
         .doubleUpDownSumObserverBuilder("testDoubleUpDownSumObserver")
-        .setUpdater(doubleResult -> doubleResult.observe(-10.1, Labels.empty()))
+        .setUpdater(doubleResult -> doubleResult.accept(-10.1, Labels.empty()))
         .build();
     sdkMeter
         .doubleValueObserverBuilder("testDoubleValueObserver")
-        .setUpdater(doubleResult -> doubleResult.observe(10.1, Labels.empty()))
+        .setUpdater(doubleResult -> doubleResult.accept(10.1, Labels.empty()))
         .build();
 
     assertThat(sdkMeterProvider.collectAllMetrics())
@@ -488,28 +488,28 @@ public class SdkMeterProviderTest {
         sdkMeterProvider, AggregatorFactory.count(AggregationTemporality.CUMULATIVE));
     sdkMeter
         .longSumObserverBuilder("testLongSumObserver")
-        .setUpdater(longResult -> longResult.observe(10, Labels.empty()))
+        .setUpdater(longResult -> longResult.accept(10L, Labels.empty()))
         .build();
     sdkMeter
         .longUpDownSumObserverBuilder("testLongUpDownSumObserver")
-        .setUpdater(longResult -> longResult.observe(-10, Labels.empty()))
+        .setUpdater(longResult -> longResult.accept(-10L, Labels.empty()))
         .build();
     sdkMeter
         .longValueObserverBuilder("testLongValueObserver")
-        .setUpdater(longResult -> longResult.observe(10, Labels.empty()))
+        .setUpdater(longResult -> longResult.accept(10L, Labels.empty()))
         .build();
 
     sdkMeter
         .doubleSumObserverBuilder("testDoubleSumObserver")
-        .setUpdater(doubleResult -> doubleResult.observe(10.1, Labels.empty()))
+        .setUpdater(doubleResult -> doubleResult.accept(10.1, Labels.empty()))
         .build();
     sdkMeter
         .doubleUpDownSumObserverBuilder("testDoubleUpDownSumObserver")
-        .setUpdater(doubleResult -> doubleResult.observe(-10.1, Labels.empty()))
+        .setUpdater(doubleResult -> doubleResult.accept(-10.1, Labels.empty()))
         .build();
     sdkMeter
         .doubleValueObserverBuilder("testDoubleValueObserver")
-        .setUpdater(doubleResult -> doubleResult.observe(10.1, Labels.empty()))
+        .setUpdater(doubleResult -> doubleResult.accept(10.1, Labels.empty()))
         .build();
 
     testClock.advanceNanos(50);
