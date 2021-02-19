@@ -22,12 +22,15 @@ dependencies {
     compileOnly("io.grpc:grpc-netty")
     compileOnly("io.grpc:grpc-netty-shaded")
 
-    implementation(project(":sdk-extensions:otproto"))
+    implementation(project(":api:metrics"))
+    implementation(project(":proto"))
     implementation("io.grpc:grpc-api")
+    implementation("io.grpc:grpc-core")
     implementation("io.grpc:grpc-protobuf")
     implementation("io.grpc:grpc-stub")
     implementation("com.google.protobuf:protobuf-java")
 
+    testImplementation(project(":sdk-extensions:otproto"))
     testImplementation(project(":sdk:testing"))
 
     testImplementation("io.grpc:grpc-testing")
@@ -48,7 +51,12 @@ dependencies {
 
     add("testGrpcOkhttpRuntimeOnly", "io.grpc:grpc-okhttp")
 
-    jmh(project(":sdk:testing"))
+    jmh(project(":sdk:testing")) {
+        isTransitive = false
+    }
+    jmh(project(":sdk-extensions:otproto")) {
+        isTransitive = false
+    }
 }
 
 tasks {

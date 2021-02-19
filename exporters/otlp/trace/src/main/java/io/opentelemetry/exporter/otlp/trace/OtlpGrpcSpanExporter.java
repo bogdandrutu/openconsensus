@@ -15,12 +15,8 @@ import io.opentelemetry.api.metrics.GlobalMetricsProvider;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.common.Labels;
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
-import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
-import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc.TraceServiceFutureStub;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.extension.otproto.SpanAdapter;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Collection;
@@ -43,7 +39,7 @@ public final class OtlpGrpcSpanExporter implements SpanExporter {
   private static final Labels EXPORT_FAILURE_LABELS =
       Labels.of("exporter", EXPORTER_NAME, "success", "false");
 
-  private final TraceServiceFutureStub traceService;
+  private final TraceServiceStub traceService;
 
   private final ManagedChannel managedChannel;
   private final long timeoutNanos;
@@ -68,7 +64,7 @@ public final class OtlpGrpcSpanExporter implements SpanExporter {
     this.managedChannel = channel;
     this.timeoutNanos = timeoutNanos;
 
-    this.traceService = TraceServiceGrpc.newFutureStub(channel);
+    this.traceService = TraceServiceStub.newStub(channel);
   }
 
   /**
@@ -79,15 +75,11 @@ public final class OtlpGrpcSpanExporter implements SpanExporter {
    */
   @Override
   public CompletableResultCode export(Collection<SpanData> spans) {
-    spansSeen.add(spans.size());
-    ExportTraceServiceRequest exportTraceServiceRequest =
-        ExportTraceServiceRequest.newBuilder()
-            .addAllResourceSpans(SpanAdapter.toProtoResourceSpans(spans))
-            .build();
+    TraceMarshaler.RequestMarshaler request = TraceMarshaler.RequestMarshaler.create(spans);
 
     final CompletableResultCode result = new CompletableResultCode();
 
-    TraceServiceFutureStub exporter;
+    TraceServiceStub exporter;
     if (timeoutNanos > 0) {
       exporter = traceService.withDeadlineAfter(timeoutNanos, TimeUnit.NANOSECONDS);
     } else {
@@ -95,7 +87,7 @@ public final class OtlpGrpcSpanExporter implements SpanExporter {
     }
 
     Futures.addCallback(
-        exporter.export(exportTraceServiceRequest),
+        exporter.export(request),
         new FutureCallback<ExportTraceServiceResponse>() {
           @Override
           public void onSuccess(@Nullable ExportTraceServiceResponse response) {

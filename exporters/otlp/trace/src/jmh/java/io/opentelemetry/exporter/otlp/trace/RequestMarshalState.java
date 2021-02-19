@@ -21,6 +21,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
@@ -57,13 +58,19 @@ public class RequestMarshalState {
 
   @Setup
   public void setup() {
-    spanDataList = new ArrayList<>(numSpans);
+    spanDataList = generateSpanData(numSpans);
+  }
+
+  static List<SpanData> generateSpanData(int numSpans) {
+    List<SpanData> spanDataList = new ArrayList<>(numSpans);
     for (int i = 0; i < numSpans; i++) {
       spanDataList.add(createSpanData());
     }
+    return spanDataList;
   }
 
   private static SpanData createSpanData() {
+    long time = TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis());
     return TestSpanData.builder()
         .setResource(RESOURCE)
         .setInstrumentationLibraryInfo(INSTRUMENTATION_LIBRARY_INFO)
@@ -72,8 +79,8 @@ public class RequestMarshalState {
         .setParentSpanContext(SpanContext.getInvalid())
         .setName("GET /api/endpoint")
         .setKind(SpanKind.SERVER)
-        .setStartEpochNanos(12345)
-        .setEndEpochNanos(12349)
+        .setStartEpochNanos(TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis()))
+        .setEndEpochNanos(time + 10)
         .setAttributes(
             Attributes.builder()
                 .put(AttributeKey.booleanKey("key_bool"), true)
@@ -84,12 +91,12 @@ public class RequestMarshalState {
         .setTotalAttributeCount(2)
         .setEvents(
             Arrays.asList(
-                EventData.create(12347, "my_event_1", Attributes.empty()),
+                EventData.create(time + 1, "my_event_1", Attributes.empty()),
                 EventData.create(
-                    12348,
+                    time + 2,
                     "my_event_2",
                     Attributes.of(AttributeKey.longKey("event_attr_key"), 1234L)),
-                EventData.create(12349, "my_event_3", Attributes.empty())))
+                EventData.create(time + 7, "my_event_3", Attributes.empty())))
         .setTotalRecordedEvents(4)
         .setLinks(
             Arrays.asList(
