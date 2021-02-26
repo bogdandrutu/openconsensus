@@ -135,7 +135,9 @@ public interface SpanContext {
    * @return {@code true} if this {@code SpanContext} is valid.
    */
   default boolean isValid() {
-    return TraceId.isValid(getTraceId()) && SpanId.isValid(getSpanId());
+    return TraceId.isValid(getTraceId())
+        && SpanId.isValid(getSpanId())
+        && getTraceFlags().isValid();
   }
 
   /**

@@ -56,6 +56,14 @@ class SpanContextTest {
         .isFalse();
     assertThat(first.isValid()).isTrue();
     assertThat(second.isValid()).isTrue();
+    assertThat(
+            SpanContext.create(
+                    FIRST_TRACE_ID,
+                    FIRST_SPAN_ID,
+                    TraceFlags.fromHex("abc", 3),
+                    TraceState.getDefault())
+                .isValid())
+        .isFalse();
   }
 
   @Test

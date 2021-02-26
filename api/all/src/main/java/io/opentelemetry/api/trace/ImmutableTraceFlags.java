@@ -6,7 +6,6 @@
 package io.opentelemetry.api.trace;
 
 import io.opentelemetry.api.internal.OtelEncodingUtils;
-import java.util.Objects;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
@@ -15,6 +14,7 @@ final class ImmutableTraceFlags implements TraceFlags {
   // Bit to represent whether trace is sampled or not.
   private static final byte SAMPLED_BIT = 0x01;
 
+  private static final ImmutableTraceFlags INVALID = new ImmutableTraceFlags((byte) 0);
   static final ImmutableTraceFlags DEFAULT = fromByte((byte) 0x00);
   static final ImmutableTraceFlags SAMPLED = fromByte(SAMPLED_BIT);
   static final int HEX_LENGTH = 2;
@@ -24,7 +24,12 @@ final class ImmutableTraceFlags implements TraceFlags {
 
   // Implementation of the TraceFlags.fromHex().
   static ImmutableTraceFlags fromHex(CharSequence src, int srcOffset) {
-    Objects.requireNonNull(src, "src");
+    // TODO: Avoid calling `subSequence`.
+    if (src == null
+        || src.length() < srcOffset + 2
+        || !OtelEncodingUtils.isValidBase16String(src.subSequence(srcOffset, srcOffset + 2))) {
+      return INVALID;
+    }
     return fromByte(
         OtelEncodingUtils.byteFromBase16(src.charAt(srcOffset), src.charAt(srcOffset + 1)));
   }
@@ -63,6 +68,11 @@ final class ImmutableTraceFlags implements TraceFlags {
   @Override
   public byte asByte() {
     return this.byteRep;
+  }
+
+  @Override
+  public boolean isValid() {
+    return this != INVALID;
   }
 
   @Override

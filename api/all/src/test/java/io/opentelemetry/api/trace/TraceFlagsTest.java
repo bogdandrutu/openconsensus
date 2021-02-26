@@ -38,6 +38,13 @@ class TraceFlagsTest {
   }
 
   @Test
+  void toFromHex_Invalid() {
+    assertThat(TraceFlags.fromHex(null, 0).isValid()).isFalse();
+    assertThat(TraceFlags.fromHex("hex", 0).isValid()).isFalse();
+    assertThat(TraceFlags.fromHex("aa", 1).isValid()).isFalse();
+  }
+
+  @Test
   void toFromByte() {
     for (int i = 0; i < 256; i++) {
       assertThat(TraceFlags.fromByte((byte) i).asByte()).isEqualTo((byte) i);

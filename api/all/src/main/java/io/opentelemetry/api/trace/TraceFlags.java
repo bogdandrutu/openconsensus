@@ -46,6 +46,8 @@ public interface TraceFlags {
 
   /**
    * Returns the {@link TraceFlags} converted from the given lowercase hex (base16) representation.
+   * If the input cannot be parsed, a {@link TraceFlags} will be returned where {@link
+   * TraceFlags#isValid()} returns {@code false}.
    *
    * <p>This may throw runtime exceptions if the input is invalid.
    *
@@ -89,4 +91,10 @@ public interface TraceFlags {
    * @return the byte representation of the {@link TraceFlags}.
    */
   byte asByte();
+
+  /**
+   * Returns whether this {@link TraceFlags} is valid. An invalid {@link TraceFlags} should
+   * generally be discarded.
+   */
+  boolean isValid();
 }

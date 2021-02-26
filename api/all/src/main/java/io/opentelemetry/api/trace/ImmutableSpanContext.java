@@ -38,7 +38,7 @@ abstract class ImmutableSpanContext implements SpanContext {
       TraceFlags traceFlags,
       TraceState traceState,
       boolean remote) {
-    if (SpanId.isValid(spanIdHex) && TraceId.isValid(traceIdHex)) {
+    if (SpanId.isValid(spanIdHex) && TraceId.isValid(traceIdHex) && traceFlags.isValid()) {
       return createInternal(
           traceIdHex, spanIdHex, traceFlags, traceState, remote, /* valid= */ true);
     }

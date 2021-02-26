@@ -207,26 +207,19 @@ public final class W3CTraceContextPropagator implements TextMapPropagator {
       return SpanContext.getInvalid();
     }
 
-    try {
-      String version = traceparent.substring(0, 2);
-      if (!VALID_VERSIONS.contains(version)) {
-        return SpanContext.getInvalid();
-      }
-      if (version.equals(VERSION_00) && traceparent.length() > TRACEPARENT_HEADER_SIZE) {
-        return SpanContext.getInvalid();
-      }
-
-      String traceId =
-          traceparent.substring(TRACE_ID_OFFSET, TRACE_ID_OFFSET + TraceId.getLength());
-      String spanId = traceparent.substring(SPAN_ID_OFFSET, SPAN_ID_OFFSET + SpanId.getLength());
-
-      TraceFlags traceFlags = TraceFlags.fromHex(traceparent, TRACE_OPTION_OFFSET);
-      return SpanContext.createFromRemoteParent(
-          traceId, spanId, traceFlags, TraceState.getDefault());
-    } catch (IllegalArgumentException e) {
-      logger.fine("Unparseable traceparent header. Returning INVALID span context.");
+    String version = traceparent.substring(0, 2);
+    if (!VALID_VERSIONS.contains(version)) {
       return SpanContext.getInvalid();
     }
+    if (version.equals(VERSION_00) && traceparent.length() > TRACEPARENT_HEADER_SIZE) {
+      return SpanContext.getInvalid();
+    }
+
+    String traceId = traceparent.substring(TRACE_ID_OFFSET, TRACE_ID_OFFSET + TraceId.getLength());
+    String spanId = traceparent.substring(SPAN_ID_OFFSET, SPAN_ID_OFFSET + SpanId.getLength());
+
+    TraceFlags traceFlags = TraceFlags.fromHex(traceparent, TRACE_OPTION_OFFSET);
+    return SpanContext.createFromRemoteParent(traceId, spanId, traceFlags, TraceState.getDefault());
   }
 
   private static TraceState extractTraceState(String traceStateHeader) {
