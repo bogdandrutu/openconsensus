@@ -72,7 +72,7 @@ dependency versions in sync.
   <dependencies>
     <dependency>
       <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-api</artifactId>
+      <artifactId>opentelemetry-sdk</artifactId>
     </dependency>
   </dependencies>
 </project>
@@ -83,7 +83,7 @@ dependency versions in sync.
 ```groovy
 dependencies {
   implementation platform("io.opentelemetry:opentelemetry-bom:1.0.0")
-  implementation('io.opentelemetry:opentelemetry-api')
+  implementation('io.opentelemetry:opentelemetry-sdk')
 }
 ```
 
@@ -116,7 +116,7 @@ We strongly recommend using our published BOM to keep all dependency versions in
   <dependencies>
     <dependency>
       <groupId>io.opentelemetry</groupId>
-      <artifactId>opentelemetry-api</artifactId>
+      <artifactId>opentelemetry-sdk</artifactId>
     </dependency>
   </dependencies>
 </project>
@@ -131,12 +131,11 @@ repositories {
 
 dependencies {
   implementation platform("io.opentelemetry:opentelemetry-bom:1.1.0-SNAPSHOT")
-  implementation('io.opentelemetry:opentelemetry-api')
+  implementation('io.opentelemetry:opentelemetry-sdk')
 }
 ```
 
-Libraries will usually only need `opentelemetry-api`, while applications
-may want to use `opentelemetry-sdk`.
+Libraries will usually only need `opentelemetry-api`, so should not depend on `opentelemetry-sdk`.
 
 ## Releases
 
