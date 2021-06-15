@@ -22,8 +22,8 @@ public class ConfigurableSpanExporterTest {
 
   @Test
   void configuration() {
-    ConfigProperties config =
-        ConfigProperties.createForTest(ImmutableMap.of("test.option", "true"));
+    DefaultConfigProperties config =
+        DefaultConfigProperties.createForTest(ImmutableMap.of("test.option", "true"));
     SpanExporter spanExporter = SpanExporterConfiguration.configureExporter("testExporter", config);
 
     assertThat(spanExporter)
@@ -37,7 +37,7 @@ public class ConfigurableSpanExporterTest {
     assertThatThrownBy(
             () ->
                 SpanExporterConfiguration.configureExporter(
-                    "catExporter", ConfigProperties.createForTest(Collections.emptyMap())))
+                    "catExporter", DefaultConfigProperties.createForTest(Collections.emptyMap())))
         .isInstanceOf(ConfigurationException.class)
         .hasMessageContaining("catExporter");
   }
@@ -47,7 +47,7 @@ public class ConfigurableSpanExporterTest {
     String exporterName = "logging";
     Map<String, String> propMap = Collections.singletonMap("otel.traces.exporter", exporterName);
     SpanExporter exporter = new LoggingSpanExporter();
-    ConfigProperties properties = ConfigProperties.createForTest(propMap);
+    DefaultConfigProperties properties = DefaultConfigProperties.createForTest(propMap);
 
     assertThat(
             TracerProviderConfiguration.configureSpanProcessor(properties, exporter, exporterName))
@@ -59,7 +59,7 @@ public class ConfigurableSpanExporterTest {
     String exporterName = "zipkin";
     Map<String, String> propMap = Collections.singletonMap("otel.traces.exporter", exporterName);
     SpanExporter exporter = ZipkinSpanExporter.builder().build();
-    ConfigProperties properties = ConfigProperties.createForTest(propMap);
+    DefaultConfigProperties properties = DefaultConfigProperties.createForTest(propMap);
 
     assertThat(
             TracerProviderConfiguration.configureSpanProcessor(properties, exporter, exporterName))

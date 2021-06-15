@@ -17,8 +17,8 @@ public class ConfigurableSamplerTest {
 
   @Test
   void configuration() {
-    ConfigProperties config =
-        ConfigProperties.createForTest(ImmutableMap.of("test.option", "true"));
+    DefaultConfigProperties config =
+        DefaultConfigProperties.createForTest(ImmutableMap.of("test.option", "true"));
     Sampler sampler = TracerProviderConfiguration.configureSampler("testSampler", config);
 
     assertThat(sampler)
@@ -32,7 +32,7 @@ public class ConfigurableSamplerTest {
     assertThatThrownBy(
             () ->
                 TracerProviderConfiguration.configureSampler(
-                    "catSampler", ConfigProperties.createForTest(Collections.emptyMap())))
+                    "catSampler", DefaultConfigProperties.createForTest(Collections.emptyMap())))
         .isInstanceOf(ConfigurationException.class)
         .hasMessageContaining("catSampler");
   }

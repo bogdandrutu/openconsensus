@@ -1,2 +1,5 @@
 Comparing source compatibility of  against 
-No changes.
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.extension.aws.AwsConfigurablePropagator  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.context.propagation.TextMapPropagator getPropagator()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.context.propagation.TextMapPropagator getPropagator(io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties)

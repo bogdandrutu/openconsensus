@@ -1,2 +1,17 @@
 Comparing source compatibility of  against 
-No changes.
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.sdk.extension.resources.HostResourceProvider  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.ConfigProperties)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties)
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.sdk.extension.resources.OsResourceProvider  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.ConfigProperties)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties)
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.sdk.extension.resources.ProcessResourceProvider  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.ConfigProperties)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties)
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.sdk.extension.resources.ProcessRuntimeResourceProvider  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.ConfigProperties)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties)

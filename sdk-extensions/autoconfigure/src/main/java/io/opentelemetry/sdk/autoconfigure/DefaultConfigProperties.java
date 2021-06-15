@@ -5,6 +5,7 @@
 
 package io.opentelemetry.sdk.autoconfigure;
 
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -24,20 +25,21 @@ import javax.annotation.Nullable;
  * for both of these will be normalized to be all lower case, and underscores will be replaced with
  * periods.
  */
-public final class ConfigProperties {
+final class DefaultConfigProperties implements ConfigProperties {
 
   private final Map<String, String> config;
 
-  static ConfigProperties get() {
-    return new ConfigProperties(System.getProperties(), System.getenv());
+  static DefaultConfigProperties get() {
+    return new DefaultConfigProperties(System.getProperties(), System.getenv());
   }
 
   // Visible for testing
-  static ConfigProperties createForTest(Map<String, String> properties) {
-    return new ConfigProperties(properties, Collections.emptyMap());
+  static DefaultConfigProperties createForTest(Map<String, String> properties) {
+    return new DefaultConfigProperties(properties, Collections.emptyMap());
   }
 
-  private ConfigProperties(Map<?, ?> systemProperties, Map<String, String> environmentVariables) {
+  private DefaultConfigProperties(
+      Map<?, ?> systemProperties, Map<String, String> environmentVariables) {
     Map<String, String> config = new HashMap<>();
     environmentVariables.forEach(
         (name, value) -> config.put(name.toLowerCase(Locale.ROOT).replace('_', '.'), value));
@@ -53,6 +55,7 @@ public final class ConfigProperties {
    *
    * @return null if the property has not been configured.
    */
+  @Override
   @Nullable
   public String getString(String name) {
     return config.get(name);
@@ -62,8 +65,9 @@ public final class ConfigProperties {
    * Returns a integer-valued configuration property.
    *
    * @return null if the property has not been configured.
-   * @throws NumberFormatException if the property is not a valid integer.
+   * @throws ConfigurationException if the property is not a valid integer.
    */
+  @Override
   @Nullable
   @SuppressWarnings("UnusedException")
   public Integer getInt(String name) {
@@ -82,8 +86,9 @@ public final class ConfigProperties {
    * Returns a long-valued configuration property.
    *
    * @return null if the property has not been configured.
-   * @throws NumberFormatException if the property is not a valid long.
+   * @throws ConfigurationException if the property is not a valid long.
    */
+  @Override
   @Nullable
   @SuppressWarnings("UnusedException")
   public Long getLong(String name) {
@@ -102,8 +107,9 @@ public final class ConfigProperties {
    * Returns a double-valued configuration property.
    *
    * @return null if the property has not been configured.
-   * @throws NumberFormatException if the property is not a valid double.
+   * @throws ConfigurationException if the property is not a valid double.
    */
+  @Override
   @Nullable
   @SuppressWarnings("UnusedException")
   public Double getDouble(String name) {
@@ -124,6 +130,7 @@ public final class ConfigProperties {
    *
    * @return an empty list if the property has not been configured.
    */
+  @Override
   public List<String> getCommaSeparatedValues(String name) {
     String value = config.get(name);
     if (value == null) {
@@ -153,6 +160,7 @@ public final class ConfigProperties {
    *     found.
    * @throws ConfigurationException for malformed duration strings.
    */
+  @Override
   @Nullable
   @SuppressWarnings("UnusedException")
   public Duration getDuration(String name) {
@@ -189,6 +197,7 @@ public final class ConfigProperties {
    *
    * @return an empty list if the property has not been configured.
    */
+  @Override
   public Map<String, String> getCommaSeparatedMap(String name) {
     return getCommaSeparatedValues(name).stream()
         .map(keyValuePair -> filterBlanksAndNulls(keyValuePair.split("=", 2)))
@@ -214,6 +223,7 @@ public final class ConfigProperties {
    *
    * @return false if the property has not been configured.
    */
+  @Override
   public boolean getBoolean(String name) {
     return Boolean.parseBoolean(config.get(name));
   }

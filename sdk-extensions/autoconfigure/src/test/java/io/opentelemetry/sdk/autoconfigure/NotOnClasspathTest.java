@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 
 class NotOnClasspathTest {
 
-  private static final ConfigProperties EMPTY =
-      ConfigProperties.createForTest(Collections.emptyMap());
+  private static final DefaultConfigProperties EMPTY =
+      DefaultConfigProperties.createForTest(Collections.emptyMap());
 
   @Test
   void otlpSpans() {
@@ -90,7 +90,7 @@ class NotOnClasspathTest {
     assertThatThrownBy(
             () ->
                 PropagatorConfiguration.configurePropagators(
-                    ConfigProperties.createForTest(
+                    DefaultConfigProperties.createForTest(
                         Collections.singletonMap("otel.propagators", "b3"))))
         .isInstanceOf(ConfigurationException.class)
         .hasMessageContaining("Unrecognized value for otel.propagators: b3");

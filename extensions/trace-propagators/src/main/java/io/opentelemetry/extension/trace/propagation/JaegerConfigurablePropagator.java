@@ -6,6 +6,7 @@
 package io.opentelemetry.extension.trace.propagation;
 
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurablePropagatorProvider;
 
 /**
@@ -14,7 +15,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigurablePropagatorProvider;
  */
 public final class JaegerConfigurablePropagator implements ConfigurablePropagatorProvider {
   @Override
-  public TextMapPropagator getPropagator() {
+  public TextMapPropagator getPropagator(ConfigProperties config) {
     return JaegerPropagator.getInstance();
   }
 

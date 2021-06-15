@@ -38,8 +38,8 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class TracerProviderConfigurationTest {
 
-  private static final ConfigProperties EMPTY =
-      ConfigProperties.createForTest(Collections.emptyMap());
+  private static final DefaultConfigProperties EMPTY =
+      DefaultConfigProperties.createForTest(Collections.emptyMap());
 
   @Mock private SpanExporter mockSpanExporter;
 
@@ -60,7 +60,7 @@ class TracerProviderConfigurationTest {
     // are verified in other test sets like testFullConfig.
     SdkTracerProvider tracerProvider =
         TracerProviderConfiguration.configureTracerProvider(
-            resource, ConfigProperties.createForTest(properties));
+            resource, DefaultConfigProperties.createForTest(properties));
     try {
       assertThat(tracerProvider.getSampler()).isEqualTo(Sampler.alwaysOff());
 
@@ -116,7 +116,7 @@ class TracerProviderConfigurationTest {
 
     BatchSpanProcessor processor =
         TracerProviderConfiguration.configureSpanProcessor(
-            ConfigProperties.createForTest(properties), mockSpanExporter);
+            DefaultConfigProperties.createForTest(properties), mockSpanExporter);
 
     try {
       assertThat(processor)
@@ -157,7 +157,8 @@ class TracerProviderConfigurationTest {
     properties.put("otel.span.link.count.limit", "3");
 
     SpanLimits config =
-        TracerProviderConfiguration.configureSpanLimits(ConfigProperties.createForTest(properties));
+        TracerProviderConfiguration.configureSpanLimits(
+            DefaultConfigProperties.createForTest(properties));
     assertThat(config.getMaxNumberOfAttributes()).isEqualTo(5);
     assertThat(config.getMaxNumberOfEvents()).isEqualTo(4);
     assertThat(config.getMaxNumberOfLinks()).isEqualTo(3);
@@ -172,7 +173,7 @@ class TracerProviderConfigurationTest {
     assertThat(
             TracerProviderConfiguration.configureSampler(
                 "traceidratio",
-                ConfigProperties.createForTest(
+                DefaultConfigProperties.createForTest(
                     Collections.singletonMap("otel.traces.sampler.arg", "0.5"))))
         .isEqualTo(Sampler.traceIdRatioBased(0.5));
     assertThat(TracerProviderConfiguration.configureSampler("traceidratio", EMPTY))
@@ -184,7 +185,7 @@ class TracerProviderConfigurationTest {
     assertThat(
             TracerProviderConfiguration.configureSampler(
                 "parentbased_traceidratio",
-                ConfigProperties.createForTest(
+                DefaultConfigProperties.createForTest(
                     Collections.singletonMap("otel.traces.sampler.arg", "0.4"))))
         .isEqualTo(Sampler.parentBased(Sampler.traceIdRatioBased(0.4)));
     assertThat(TracerProviderConfiguration.configureSampler("parentbased_traceidratio", EMPTY))

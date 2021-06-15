@@ -12,7 +12,7 @@ dependencies {
     api(project(":api:all"))
     api(project(":sdk:all"))
 
-    compileOnly(project(":sdk-extensions:autoconfigure"))
+    compileOnly(project(":sdk-extensions:autoconfigure-spi"))
 
     implementation(project(":semconv"))
 

@@ -107,14 +107,14 @@ class EndpointConfigurationTest {
     SpanExporter spanExporter =
         SpanExporterConfiguration.configureExporter(
             "otlp",
-            ConfigProperties.createForTest(
+            DefaultConfigProperties.createForTest(
                 ImmutableMap.of(
                     "otel.exporter.otlp.traces.endpoint",
                     "http://localhost:" + server.httpPort())));
 
     OtlpGrpcMetricExporter metricExporter =
         MetricExporterConfiguration.configureOtlpMetrics(
-            ConfigProperties.createForTest(
+            DefaultConfigProperties.createForTest(
                 ImmutableMap.of(
                     "otel.exporter.otlp.metrics.endpoint",
                     "http://localhost:" + server.httpPort())),

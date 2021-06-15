@@ -12,6 +12,7 @@ import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporterBuilder;
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter;
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporterBuilder;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurableSpanExporterProvider;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.io.IOException;

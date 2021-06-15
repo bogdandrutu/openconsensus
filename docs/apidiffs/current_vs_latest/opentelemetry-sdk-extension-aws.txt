@@ -1,2 +1,21 @@
 Comparing source compatibility of  against 
-No changes.
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.sdk.extension.aws.resource.BeanstalkResourceProvider  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.ConfigProperties)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties)
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.sdk.extension.aws.resource.Ec2ResourceProvider  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.ConfigProperties)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties)
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.sdk.extension.aws.resource.EcsResourceProvider  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.ConfigProperties)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties)
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.sdk.extension.aws.resource.EksResourceProvider  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.ConfigProperties)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties)
+***! MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.sdk.extension.aws.resource.LambdaResourceProvider  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	---! REMOVED METHOD: PUBLIC(-) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.ConfigProperties)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.sdk.resources.Resource createResource(io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties)

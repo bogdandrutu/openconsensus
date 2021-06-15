@@ -5,7 +5,7 @@
 
 package io.opentelemetry.sdk.extension.aws.resource;
 
-import io.opentelemetry.sdk.autoconfigure.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 

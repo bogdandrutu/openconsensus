@@ -24,7 +24,7 @@ class EnvironmentResourceTest {
   @Test
   void resourceFromConfig_empty() {
     Attributes attributes =
-        EnvironmentResource.getAttributes(ConfigProperties.createForTest(emptyMap()));
+        EnvironmentResource.getAttributes(DefaultConfigProperties.createForTest(emptyMap()));
 
     assertThat(attributes).isEmpty();
   }
@@ -33,7 +33,7 @@ class EnvironmentResourceTest {
   void resourceFromConfig() {
     Attributes attributes =
         EnvironmentResource.getAttributes(
-            ConfigProperties.createForTest(
+            DefaultConfigProperties.createForTest(
                 singletonMap(
                     EnvironmentResource.ATTRIBUTE_PROPERTY,
                     "service.name=myService,appName=MyApp")));
@@ -48,7 +48,7 @@ class EnvironmentResourceTest {
   void serviceName() {
     Attributes attributes =
         EnvironmentResource.getAttributes(
-            ConfigProperties.createForTest(
+            DefaultConfigProperties.createForTest(
                 singletonMap(EnvironmentResource.SERVICE_NAME_PROPERTY, "myService")));
 
     assertThat(attributes).hasSize(1).containsEntry(ResourceAttributes.SERVICE_NAME, "myService");
@@ -58,7 +58,7 @@ class EnvironmentResourceTest {
   void resourceFromConfig_overrideServiceName() {
     Attributes attributes =
         EnvironmentResource.getAttributes(
-            ConfigProperties.createForTest(
+            DefaultConfigProperties.createForTest(
                 ImmutableMap.of(
                     EnvironmentResource.ATTRIBUTE_PROPERTY,
                     "service.name=myService,appName=MyApp",
@@ -75,7 +75,7 @@ class EnvironmentResourceTest {
   void resourceFromConfig_emptyEnvVar() {
     Attributes attributes =
         EnvironmentResource.getAttributes(
-            ConfigProperties.createForTest(
+            DefaultConfigProperties.createForTest(
                 singletonMap(EnvironmentResource.ATTRIBUTE_PROPERTY, "")));
 
     assertThat(attributes).isEmpty();

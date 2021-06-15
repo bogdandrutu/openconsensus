@@ -502,8 +502,13 @@ subprojects {
                     // the japicmp "old" version is either the user-specified one, or the latest release.
                     val userRequestedBase = project.properties["apiBaseVersion"] as String?
                     val baselineVersion: String = userRequestedBase ?: latestReleasedVersion
-                    val baselineArtifact: File = project.findArtifact(baselineVersion)
-                    oldClasspath = files(baselineArtifact)
+                    try {
+                        val baselineArtifact: File = project.findArtifact(baselineVersion)
+                        oldClasspath = files(baselineArtifact)
+                    } catch (ignored: Throwable) {
+                        // Generally a module that hasn't been released yet.
+                        oldClasspath = files()
+                    }
 
                     // the japicmp "new" version is either the user-specified one, or the locally built jar.
                     val newVersion : String? = project.properties["apiNewVersion"] as String?

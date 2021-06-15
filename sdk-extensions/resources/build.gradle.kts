@@ -15,7 +15,7 @@ dependencies {
     
     implementation(project(":semconv"))
 
-    compileOnly(project(":sdk-extensions:autoconfigure"))
+    compileOnly(project(":sdk-extensions:autoconfigure-spi"))
 
     compileOnly("org.codehaus.mojo:animal-sniffer-annotations")
 

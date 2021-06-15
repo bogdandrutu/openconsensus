@@ -23,6 +23,7 @@ testSets {
 dependencies {
     api(project(":sdk:all"))
     api(project(":sdk:metrics"))
+    api(project(":sdk-extensions:autoconfigure-spi"))
 
     implementation(project(":semconv"))
 

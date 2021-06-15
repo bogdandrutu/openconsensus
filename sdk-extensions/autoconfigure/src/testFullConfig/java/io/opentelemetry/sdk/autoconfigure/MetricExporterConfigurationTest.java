@@ -19,7 +19,7 @@ class MetricExporterConfigurationTest {
   void configureOtlpTimeout() {
     OtlpGrpcMetricExporter exporter =
         MetricExporterConfiguration.configureOtlpMetrics(
-            ConfigProperties.createForTest(
+            DefaultConfigProperties.createForTest(
                 ImmutableMap.of(
                     "otel.exporter.otlp.timeout", "10ms",
                     "otel.imr.export.interval", "5s")),

@@ -7,6 +7,7 @@ package io.opentelemetry.sdk.autoconfigure;
 
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.SdkMeterProviderConfigurer;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
@@ -36,7 +37,7 @@ public final class OpenTelemetrySdkAutoConfiguration {
    * properties and environment variables.
    */
   public static OpenTelemetrySdk initialize() {
-    ConfigProperties config = ConfigProperties.get();
+    ConfigProperties config = DefaultConfigProperties.get();
     ContextPropagators propagators = PropagatorConfiguration.configurePropagators(config);
 
     Resource resource = getResource();
@@ -57,7 +58,7 @@ public final class OpenTelemetrySdkAutoConfiguration {
 
     for (SdkMeterProviderConfigurer configurer :
         ServiceLoader.load(SdkMeterProviderConfigurer.class)) {
-      configurer.configure(meterProviderBuilder);
+      configurer.configure(meterProviderBuilder, config);
     }
 
     SdkMeterProvider meterProvider = meterProviderBuilder.buildAndRegisterGlobal();
@@ -70,7 +71,7 @@ public final class OpenTelemetrySdkAutoConfiguration {
   }
 
   private static Resource buildResource() {
-    ConfigProperties config = ConfigProperties.get();
+    DefaultConfigProperties config = DefaultConfigProperties.get();
     Resource result = Resource.getDefault();
 
     // TODO(anuraaga): We use a hyphen only once in this artifact, for

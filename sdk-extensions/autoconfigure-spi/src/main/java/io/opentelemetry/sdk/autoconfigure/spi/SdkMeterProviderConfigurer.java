@@ -17,5 +17,5 @@ import io.opentelemetry.sdk.metrics.SdkMeterProviderBuilder;
  */
 public interface SdkMeterProviderConfigurer {
   /** Configures the {@link SdkMeterProviderBuilder}. */
-  void configure(SdkMeterProviderBuilder meterProviderBuilder);
+  void configure(SdkMeterProviderBuilder meterProviderBuilder, ConfigProperties config);
 }

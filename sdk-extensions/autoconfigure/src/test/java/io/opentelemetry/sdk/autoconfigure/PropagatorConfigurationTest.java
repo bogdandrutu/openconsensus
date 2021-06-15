@@ -17,7 +17,7 @@ class PropagatorConfigurationTest {
   void defaultPropagators() {
     ContextPropagators contextPropagators =
         PropagatorConfiguration.configurePropagators(
-            ConfigProperties.createForTest(Collections.emptyMap()));
+            DefaultConfigProperties.createForTest(Collections.emptyMap()));
 
     assertThat(contextPropagators.getTextMapPropagator().fields())
         .containsExactlyInAnyOrder("traceparent", "tracestate", "baggage");

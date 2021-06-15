@@ -9,6 +9,7 @@ import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurablePropagatorProvider;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -28,7 +29,8 @@ final class PropagatorConfiguration {
             .collect(
                 Collectors.toMap(
                     ConfigurablePropagatorProvider::getName,
-                    ConfigurablePropagatorProvider::getPropagator));
+                    configurablePropagatorProvider ->
+                        configurablePropagatorProvider.getPropagator(config)));
 
     Set<TextMapPropagator> propagators = new LinkedHashSet<>();
     List<String> requestedPropagators = config.getCommaSeparatedValues("otel.propagators");

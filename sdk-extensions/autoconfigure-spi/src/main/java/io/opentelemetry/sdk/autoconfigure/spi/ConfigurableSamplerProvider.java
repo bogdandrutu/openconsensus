@@ -5,7 +5,6 @@
 
 package io.opentelemetry.sdk.autoconfigure.spi;
 
-import io.opentelemetry.sdk.autoconfigure.ConfigProperties;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 
 /**

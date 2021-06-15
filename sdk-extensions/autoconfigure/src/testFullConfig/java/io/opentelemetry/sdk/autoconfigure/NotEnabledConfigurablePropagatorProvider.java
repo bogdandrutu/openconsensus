@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurablePropagatorProvider;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,7 +17,7 @@ import javax.annotation.Nullable;
 
 public class NotEnabledConfigurablePropagatorProvider implements ConfigurablePropagatorProvider {
   @Override
-  public TextMapPropagator getPropagator() {
+  public TextMapPropagator getPropagator(ConfigProperties config) {
     return new TextMapPropagator() {
       @Override
       public Collection<String> fields() {
