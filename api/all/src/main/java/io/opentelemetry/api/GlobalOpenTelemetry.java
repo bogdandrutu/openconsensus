@@ -33,6 +33,9 @@ public final class GlobalOpenTelemetry {
 
   private static final Logger logger = Logger.getLogger(GlobalOpenTelemetry.class.getName());
 
+  private static final boolean suppressSdkCheck =
+      Boolean.getBoolean("otel.sdk.suppress-sdk-initialized-warning");
+
   private static final Object mutex = new Object();
 
   @Nullable private static volatile ObfuscatedOpenTelemetry globalOpenTelemetry;
@@ -57,6 +60,10 @@ public final class GlobalOpenTelemetry {
           OpenTelemetry autoConfigured = maybeAutoConfigure();
           if (autoConfigured != null) {
             return autoConfigured;
+          }
+
+          if (!suppressSdkCheck) {
+            SdkChecker.logIfSdkFound();
           }
 
           set(OpenTelemetry.noop());
@@ -181,6 +188,39 @@ public final class GlobalOpenTelemetry {
           t.getTargetException());
       return null;
     }
+  }
+
+  // Use an inner class that checks and logs in its static initializer to have log-once behavior
+  // using initial classloader lock and no further runtime locks or atomics.
+  private static class SdkChecker {
+    static {
+      boolean hasSdk = false;
+      try {
+        Class.forName("io.opentelemetry.sdk.OpenTelemetrySdk");
+        hasSdk = true;
+      } catch (Throwable t) {
+        // Ignore
+      }
+
+      if (hasSdk) {
+        logger.log(
+            Level.SEVERE,
+            "Attempt to access GlobalOpenTelemetry.get before OpenTelemetrySdk has been "
+                + "initialized. This generally means telemetry will not be recorded for parts of "
+                + "your application. Make sure to initialize OpenTelemetrySdk, using "
+                + "OpenTelemetrySdk.builder()...buildAndRegisterGlobal(), as early as possible in "
+                + "your application. If you do not need to use the OpenTelemetry SDK, either "
+                + "exclude it from your classpath or set the "
+                + "'otel.sdk.suppress-sdk-initialized-warning' system property to true.",
+            // Add stack trace to log to allow user to find the problematic invocation.
+            new Throwable());
+      }
+    }
+
+    // All the logic is in the static initializer, this method is called just to load the class and
+    // that's it. JVM will then optimize it away completely because it's empty so we have no
+    // overhead for a log-once pattern.
+    static void logIfSdkFound() {}
   }
 
   /**
