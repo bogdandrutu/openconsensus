@@ -32,7 +32,6 @@ import io.opentelemetry.sdk.trace.TestUtils;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessorTest.WaitingSpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-import io.opentelemetry.sdk.trace.samplers.SamplingDecision;
 import io.opentelemetry.sdk.trace.samplers.SamplingResult;
 import java.util.Collections;
 import java.util.List;
@@ -132,7 +131,7 @@ class SimpleSpanProcessorTest {
             .build();
 
     when(mockSampler.shouldSample(any(), any(), any(), any(), any(), anyList()))
-        .thenReturn(SamplingResult.create(SamplingDecision.DROP));
+        .thenReturn(SamplingResult.drop());
 
     try {
       Tracer tracer = sdkTracerProvider.get(getClass().getName());
@@ -140,7 +139,7 @@ class SimpleSpanProcessorTest {
       tracer.spanBuilder(SPAN_NAME).startSpan();
 
       when(mockSampler.shouldSample(any(), any(), any(), any(), any(), anyList()))
-          .thenReturn(SamplingResult.create(SamplingDecision.RECORD_AND_SAMPLE));
+          .thenReturn(SamplingResult.recordAndSample());
       Span span = tracer.spanBuilder(SPAN_NAME).startSpan();
       span.end();
 

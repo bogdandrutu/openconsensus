@@ -11,7 +11,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurableSamplerProvider;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-import io.opentelemetry.sdk.trace.samplers.SamplingDecision;
 import io.opentelemetry.sdk.trace.samplers.SamplingResult;
 import java.util.List;
 
@@ -42,7 +41,7 @@ public class TestConfigurableSamplerProvider implements ConfigurableSamplerProvi
         SpanKind spanKind,
         Attributes attributes,
         List<LinkData> parentLinks) {
-      return SamplingResult.create(SamplingDecision.RECORD_AND_SAMPLE);
+      return SamplingResult.recordAndSample();
     }
 
     @Override

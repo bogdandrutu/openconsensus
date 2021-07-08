@@ -28,6 +28,15 @@ class SamplingResultTest {
     assertThat(SamplingResult.create(SamplingDecision.DROP).getDecision())
         .isEqualTo(SamplingDecision.DROP);
     assertThat(SamplingResult.create(SamplingDecision.DROP).getAttributes().isEmpty()).isTrue();
+
+    assertThat(SamplingResult.recordAndSample()).isSameAs(SamplingResult.recordAndSample());
+    assertThat(SamplingResult.drop()).isSameAs(SamplingResult.drop());
+
+    assertThat(SamplingResult.recordAndSample().getDecision())
+        .isEqualTo(SamplingDecision.RECORD_AND_SAMPLE);
+    assertThat(SamplingResult.recordAndSample().getAttributes().isEmpty()).isTrue();
+    assertThat(SamplingResult.drop().getDecision()).isEqualTo(SamplingDecision.DROP);
+    assertThat(SamplingResult.drop().getAttributes().isEmpty()).isTrue();
   }
 
   @Test

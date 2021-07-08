@@ -68,6 +68,45 @@ public interface SamplingResult {
   }
 
   /**
+   * Returns a {@link SamplingResult} corresponding to {@link SamplingDecision#RECORD_AND_SAMPLE}
+   * with no attributes and {@link SamplingResult#getDecision()} returning {@code decision}.
+   *
+   * <p>This is meant for use by custom {@link Sampler} implementations and is equivalent to calling
+   * {@code SamplingResult.create(SamplingDecision.RECORD_AND_SAMPLE)}.
+   *
+   * @return A {@link SamplingResult} with empty attributes and the provided {@code decision}.
+   */
+  static SamplingResult recordAndSample() {
+    return ImmutableSamplingResult.getEmptyRecordedAndSampledSamplingResult();
+  }
+
+  /**
+   * Returns a {@link SamplingResult} corresponding to {@link SamplingDecision#RECORD_ONLY} with no
+   * attributes and {@link SamplingResult#getDecision()} returning {@code decision}.
+   *
+   * <p>This is meant for use by custom {@link Sampler} implementations and is equivalent to calling
+   * {@code SamplingResult.create(SamplingDecision.RECORD_ONLY)}.
+   *
+   * @return A {@link SamplingResult} with empty attributes and the provided {@code decision}.
+   */
+  static SamplingResult recordOnly() {
+    return ImmutableSamplingResult.getEmptyRecordedSamplingResult();
+  }
+
+  /**
+   * Returns a {@link SamplingResult} corresponding to {@link SamplingDecision#DROP} with no
+   * attributes and {@link SamplingResult#getDecision()} returning {@code decision}.
+   *
+   * <p>This is meant for use by custom {@link Sampler} implementations and is equivalent to calling
+   * {@code SamplingResult.create(SamplingDecision.DROP)}.
+   *
+   * @return A {@link SamplingResult} with empty attributes and the provided {@code decision}.
+   */
+  static SamplingResult drop() {
+    return ImmutableSamplingResult.getEmptyNotSampledOrRecordedSamplingResult();
+  }
+
+  /**
    * Return decision on whether a span should be recorded, recorded and sampled or not recorded.
    *
    * @return sampling result.

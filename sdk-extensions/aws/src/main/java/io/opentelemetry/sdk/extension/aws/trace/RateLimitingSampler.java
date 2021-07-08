@@ -13,7 +13,6 @@ import io.opentelemetry.sdk.internal.RateLimiter;
 import io.opentelemetry.sdk.internal.SystemClock;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-import io.opentelemetry.sdk.trace.samplers.SamplingDecision;
 import io.opentelemetry.sdk.trace.samplers.SamplingResult;
 import java.util.List;
 
@@ -41,9 +40,9 @@ final class RateLimitingSampler implements Sampler {
       Attributes attributes,
       List<LinkData> parentLinks) {
     if (limiter.trySpend(1)) {
-      return SamplingResult.create(SamplingDecision.RECORD_AND_SAMPLE);
+      return SamplingResult.recordAndSample();
     }
-    return SamplingResult.create(SamplingDecision.DROP);
+    return SamplingResult.drop();
   }
 
   @Override

@@ -1,4 +1,9 @@
 Comparing source compatibility of  against 
+***! MODIFIED INTERFACE: PUBLIC ABSTRACT io.opentelemetry.sdk.trace.samplers.SamplingResult  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	+++! NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.sdk.trace.samplers.SamplingResult drop()
+	+++! NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.sdk.trace.samplers.SamplingResult recordAndSample()
+	+++! NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.sdk.trace.samplers.SamplingResult recordOnly()
 ***  MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.sdk.trace.SdkTracerProvider  (not serializable)
 	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.api.trace.TracerBuilder tracerBuilder(java.lang.String)
