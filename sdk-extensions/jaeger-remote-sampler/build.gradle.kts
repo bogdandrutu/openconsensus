@@ -10,6 +10,7 @@ otelJava.moduleName.set("io.opentelemetry.sdk.extension.trace.jaeger")
 
 dependencies {
     api(project(":sdk:all"))
+    compileOnly(project(":sdk-extensions:autoconfigure"))
 
     implementation(project(":sdk:all"))
     implementation("io.grpc:grpc-api")
@@ -17,6 +18,7 @@ dependencies {
     implementation("io.grpc:grpc-stub")
     implementation("com.google.protobuf:protobuf-java")
 
+    testImplementation(project(":sdk-extensions:autoconfigure"))
     testImplementation("io.grpc:grpc-testing")
     testImplementation("org.testcontainers:junit-jupiter")
 

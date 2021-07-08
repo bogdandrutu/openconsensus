@@ -1,2 +1,7 @@
 Comparing source compatibility of  against 
-No changes.
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.sdk.extension.trace.jaeger.sampler.JaegerRemoteSamplerProvider  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) JaegerRemoteSamplerProvider()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.sdk.trace.samplers.Sampler createSampler(io.opentelemetry.sdk.autoconfigure.ConfigProperties)
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getName()
