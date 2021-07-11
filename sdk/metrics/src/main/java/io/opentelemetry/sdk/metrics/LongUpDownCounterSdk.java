@@ -5,85 +5,67 @@
 
 package io.opentelemetry.sdk.metrics;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BoundLongUpDownCounter;
 import io.opentelemetry.api.metrics.LongUpDownCounter;
-import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
-import io.opentelemetry.api.metrics.common.Labels;
-import io.opentelemetry.sdk.metrics.aggregator.AggregatorHandle;
-import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
-import io.opentelemetry.sdk.metrics.common.InstrumentType;
-import io.opentelemetry.sdk.metrics.common.InstrumentValueType;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.sdk.metrics.instrument.LongMeasurement;
+import io.opentelemetry.sdk.metrics.state.StorageHandle;
+import io.opentelemetry.sdk.metrics.state.WriteableInstrumentStorage;
+import java.util.Objects;
 
-final class LongUpDownCounterSdk extends AbstractSynchronousInstrument
-    implements LongUpDownCounter {
+/** Sdk implementation of LongUpDownCounter. */
+public class LongUpDownCounterSdk implements LongUpDownCounter {
+  private final WriteableInstrumentStorage storage;
 
-  private LongUpDownCounterSdk(
-      InstrumentDescriptor descriptor, SynchronousInstrumentAccumulator<?> accumulator) {
-    super(descriptor, accumulator);
+  LongUpDownCounterSdk(WriteableInstrumentStorage storage) {
+    this.storage = storage;
   }
 
   @Override
-  public void add(long increment, Labels labels) {
-    AggregatorHandle<?> aggregatorHandle = acquireHandle(labels);
-    try {
-      aggregatorHandle.recordLong(increment);
-    } finally {
-      aggregatorHandle.release();
-    }
+  public void add(long value, Attributes attributes, Context context) {
+    storage.record(LongMeasurement.create(value, attributes, context));
   }
 
   @Override
-  public void add(long increment) {
-    add(increment, Labels.empty());
+  public void add(long value, Attributes attributes) {
+    add(value, attributes, Context.current());
   }
 
   @Override
-  public BoundLongUpDownCounter bind(Labels labels) {
-    return new BoundInstrument(acquireHandle(labels));
+  public void add(long value) {
+    add(value, Attributes.empty());
   }
 
-  static final class BoundInstrument implements BoundLongUpDownCounter {
-    private final AggregatorHandle<?> aggregatorHandle;
+  @Override
+  public BoundLongUpDownCounter bind(Attributes attributes) {
+    Objects.requireNonNull(attributes, "Null attributes");
+    return new SdkBoundLongUpDownCounter(attributes, storage.bind(attributes));
+  }
 
-    BoundInstrument(AggregatorHandle<?> aggregatorHandle) {
-      this.aggregatorHandle = aggregatorHandle;
+  /** Simple implementation of bound counter for now. */
+  private static class SdkBoundLongUpDownCounter implements BoundLongUpDownCounter {
+    private final Attributes attributes;
+    private final StorageHandle handle;
+
+    SdkBoundLongUpDownCounter(Attributes attributes, StorageHandle handle) {
+      this.attributes = attributes;
+      this.handle = handle;
     }
 
     @Override
-    public void add(long increment) {
-      aggregatorHandle.recordLong(increment);
+    public void add(long value, Context context) {
+      handle.record(LongMeasurement.create(value, attributes, context));
+    }
+
+    @Override
+    public void add(long value) {
+      add(value, Context.current());
     }
 
     @Override
     public void unbind() {
-      aggregatorHandle.release();
-    }
-  }
-
-  static final class Builder
-      extends AbstractSynchronousInstrumentBuilder<LongUpDownCounterSdk.Builder>
-      implements LongUpDownCounterBuilder {
-
-    Builder(
-        String name,
-        MeterProviderSharedState meterProviderSharedState,
-        MeterSharedState meterSharedState) {
-      super(
-          name,
-          InstrumentType.UP_DOWN_COUNTER,
-          InstrumentValueType.LONG,
-          meterProviderSharedState,
-          meterSharedState);
-    }
-
-    @Override
-    Builder getThis() {
-      return this;
-    }
-
-    @Override
-    public LongUpDownCounterSdk build() {
-      return buildInstrument(LongUpDownCounterSdk::new);
+      handle.release();
     }
   }
 }

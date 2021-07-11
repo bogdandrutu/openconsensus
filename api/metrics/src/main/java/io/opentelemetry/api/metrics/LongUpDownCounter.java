@@ -5,62 +5,44 @@
 
 package io.opentelemetry.api.metrics;
 
-import io.opentelemetry.api.metrics.common.Labels;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.context.Context;
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * UpDownCounter is a synchronous instrument and very similar to Counter except that Add(increment)
- * supports negative increments. This makes UpDownCounter not useful for computing a rate
- * aggregation. The default aggregation is `Sum`, only the sum is non-monotonic. It is generally
- * useful for capturing changes in an amount of resources used, or any quantity that rises and falls
- * during a request.
- *
- * <p>Example:
- *
- * <pre>{@code
- * class YourClass {
- *   private static final Meter meter = OpenTelemetry.getMeterProvider().get("my_library_name");
- *   private static final LongUpDownCounter upDownCounter =
- *       meter.
- *           .longUpDownCounterBuilder("active_tasks")
- *           .setDescription("Number of active tasks")
- *           .setUnit("1")
- *           .build();
- *
- *   // It is recommended that the API user keep a reference to a Bound Counter.
- *   private static final BoundLongUpDownCounter someWorkBound =
- *       upDownCounter.bind("work_name", "some_work");
- *
- *   void doSomeWork() {
- *      someWorkBound.add(1);
- *      // Your code here.
- *      someWorkBound.add(-1);
- *   }
- * }
- * }</pre>
- */
+/** An up-down-counter instrument that records {@code long} values. */
 @ThreadSafe
-public interface LongUpDownCounter extends SynchronousInstrument<BoundLongUpDownCounter> {
+public interface LongUpDownCounter extends UpDownCounter {
+  /**
+   * Record a value with a set of attributes.
+   *
+   * @param value The increment amount. May be positive, negative or zero.
+   * @param attributes A set of attributes to associate with the count.
+   * @param context The explicit context to associate with this measurement.
+   */
+  public void add(long value, Attributes attributes, Context context);
+  /**
+   * Record a value with a set of attributes.
+   *
+   * <p>Note: This may use {@code Context.current()} to pull the context associated with this
+   * measurement.
+   *
+   * @param value The increment amount. May be positive, negative or zero.
+   * @param attributes A set of attributes to associate with the count.
+   */
+  public void add(long value, Attributes attributes);
+  /**
+   * Reecord a value.
+   *
+   * <p>Note: This may use {@code Context.current()} to pull the context associated with this
+   * measurement.
+   *
+   * @param value The increment amount. May be positive, negative or zero.
+   */
+  public void add(long value);
 
   /**
-   * Adds the given {@code increment} to the current value.
-   *
-   * <p>The value added is associated with the current {@code Context} and provided set of labels.
-   *
-   * @param increment the value to add.
-   * @param labels the set of labels to be associated to this recording.
+   * Construct a bound version of this instrument where all recorded values use the given
+   * attributes.
    */
-  void add(long increment, Labels labels);
-
-  /**
-   * Adds the given {@code increment} to the current value.
-   *
-   * <p>The value added is associated with the current {@code Context} and empty labels.
-   *
-   * @param increment the value to add.
-   */
-  void add(long increment);
-
-  @Override
-  BoundLongUpDownCounter bind(Labels labels);
+  public BoundLongUpDownCounter bind(Attributes attributes);
 }

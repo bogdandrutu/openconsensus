@@ -5,25 +5,33 @@
 
 package io.opentelemetry.sdk.metrics.view;
 
-import com.google.auto.value.AutoValue;
 import io.opentelemetry.sdk.metrics.aggregator.AggregatorFactory;
-import io.opentelemetry.sdk.metrics.processor.LabelsProcessorFactory;
-import javax.annotation.concurrent.Immutable;
+import io.opentelemetry.sdk.metrics.instrument.InstrumentDescriptor;
+import javax.annotation.Nullable;
 
-/** TODO: javadoc. */
-@AutoValue
-@Immutable
-public abstract class View {
-  public abstract AggregatorFactory getAggregatorFactory();
+/** Configuration for a view. */
+public interface View {
+  /** The Instrument selection criteria. */
+  InstrumentSelectionCriteria getInstrumentSelection();
 
-  public abstract LabelsProcessorFactory getLabelsProcessorFactory();
+  /** The `name` of the View (optional). If not provided, the Instrument `name` will be used. */
+  @Nullable
+  String getName();
 
+  /**
+   * The `aggregation` (optional) to be used. If not provided, the default aggregation (based on the
+   * type of the Instrument) will be applied.
+   */
+  AggregatorFactory<?> getAggregator(InstrumentDescriptor instrument);
+
+  /**
+   * A processor which takes in the attributes oof a measurement and determines the resulting set of
+   * attributes.
+   */
+  AttributesProcessor getAttributesProcessor();
+
+  /** Summons a new builder for views. */
   public static ViewBuilder builder() {
-    return new ViewBuilder();
-  }
-
-  static View create(
-      AggregatorFactory aggregatorFactory, LabelsProcessorFactory labelsProcessorFactory) {
-    return new AutoValue_View(aggregatorFactory, labelsProcessorFactory);
+    return new ViewBuilderImpl();
   }
 }

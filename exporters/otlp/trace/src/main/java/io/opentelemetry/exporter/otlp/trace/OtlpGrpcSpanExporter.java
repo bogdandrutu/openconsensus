@@ -11,11 +11,12 @@ import com.google.common.util.concurrent.MoreExecutors;
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BoundLongCounter;
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.common.Labels;
 import io.opentelemetry.exporter.otlp.internal.SpanAdapter;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceResponse;
@@ -35,13 +36,15 @@ import javax.annotation.concurrent.ThreadSafe;
 /** Exports spans using OTLP via gRPC, using OpenTelemetry's protobuf model. */
 @ThreadSafe
 public final class OtlpGrpcSpanExporter implements SpanExporter {
-
+  private static final AttributeKey<String> EXPORTER_KEY = AttributeKey.stringKey("exporter");
+  private static final AttributeKey<String> SUCCESS_KEY = AttributeKey.stringKey("success");
   private static final String EXPORTER_NAME = OtlpGrpcSpanExporter.class.getSimpleName();
-  private static final Labels EXPORTER_NAME_LABELS = Labels.of("exporter", EXPORTER_NAME);
-  private static final Labels EXPORT_SUCCESS_LABELS =
-      Labels.of("exporter", EXPORTER_NAME, "success", "true");
-  private static final Labels EXPORT_FAILURE_LABELS =
-      Labels.of("exporter", EXPORTER_NAME, "success", "false");
+  private static final Attributes EXPORTER_NAME_Attributes =
+      Attributes.of(EXPORTER_KEY, EXPORTER_NAME);
+  private static final Attributes EXPORT_SUCCESS_Attributes =
+      Attributes.of(EXPORTER_KEY, EXPORTER_NAME, SUCCESS_KEY, "true");
+  private static final Attributes EXPORT_FAILURE_Attributes =
+      Attributes.of(EXPORTER_KEY, EXPORTER_NAME, SUCCESS_KEY, "false");
 
   private final ThrottlingLogger logger =
       new ThrottlingLogger(Logger.getLogger(OtlpGrpcSpanExporter.class.getName()));
@@ -62,12 +65,13 @@ public final class OtlpGrpcSpanExporter implements SpanExporter {
    *     0 or to a negative value, the exporter will wait indefinitely.
    */
   OtlpGrpcSpanExporter(ManagedChannel channel, long timeoutNanos) {
-    Meter meter = GlobalMeterProvider.getMeter("io.opentelemetry.exporters.otlp");
+    // TODO: telemetry schema version.
+    Meter meter = GlobalMeterProvider.get().meterBuilder("io.opentelemetry.exporters.otlp").build();
     this.spansSeen =
-        meter.longCounterBuilder("spansSeenByExporter").build().bind(EXPORTER_NAME_LABELS);
-    LongCounter spansExportedCounter = meter.longCounterBuilder("spansExportedByExporter").build();
-    this.spansExportedSuccess = spansExportedCounter.bind(EXPORT_SUCCESS_LABELS);
-    this.spansExportedFailure = spansExportedCounter.bind(EXPORT_FAILURE_LABELS);
+        meter.counterBuilder("spansSeenByExporter").build().bind(EXPORTER_NAME_Attributes);
+    LongCounter spansExportedCounter = meter.counterBuilder("spansExportedByExporter").build();
+    this.spansExportedSuccess = spansExportedCounter.bind(EXPORT_SUCCESS_Attributes);
+    this.spansExportedFailure = spansExportedCounter.bind(EXPORT_FAILURE_Attributes);
     this.managedChannel = channel;
     this.timeoutNanos = timeoutNanos;
 

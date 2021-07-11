@@ -7,11 +7,11 @@ package io.opentelemetry.sdk.metrics;
 
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.sdk.common.Clock;
-import io.opentelemetry.sdk.metrics.view.InstrumentSelector;
 import io.opentelemetry.sdk.metrics.view.View;
 import io.opentelemetry.sdk.resources.Resource;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -22,7 +22,8 @@ public final class SdkMeterProviderBuilder {
 
   private Clock clock = Clock.getDefault();
   private Resource resource = Resource.getDefault();
-  private final Map<InstrumentSelector, View> instrumentSelectorViews = new HashMap<>();
+  private MeasurementProcessor processor = DefaultMeasurementProcessor.builder().build();
+  private final List<View> views = new ArrayList<>();
 
   SdkMeterProviderBuilder() {}
 
@@ -51,33 +52,25 @@ public final class SdkMeterProviderBuilder {
   }
 
   /**
-   * Register a view with the given {@link InstrumentSelector}.
+   * Assign a {@link MeasurementProcessor} for this SDK.
    *
-   * <p>Example on how to register a view:
-   *
-   * <pre>{@code
-   * // create a SdkMeterProviderBuilder
-   * SdkMeterProviderBuilder meterProviderBuilder = SdkMeterProvider.builder();
-   *
-   * // create a selector to select which instruments to customize:
-   * InstrumentSelector instrumentSelector = InstrumentSelector.builder()
-   *   .setInstrumentType(InstrumentType.COUNTER)
-   *   .build();
-   *
-   * // create a specification of how you want the metrics aggregated:
-   * AggregatorFactory aggregatorFactory = AggregatorFactory.minMaxSumCount();
-   *
-   * // register the view with the SdkMeterProviderBuilder
-   * meterProviderBuilder.registerView(instrumentSelector, View.builder()
-   *   .setAggregatorFactory(aggregatorFactory).build());
-   * }</pre>
-   *
-   * @since 1.1.0
+   * @param processor The mechanism of converting measurements into metrics.
+   * @return this
    */
-  public SdkMeterProviderBuilder registerView(InstrumentSelector selector, View view) {
-    Objects.requireNonNull(selector, "selector");
-    Objects.requireNonNull(view, "view");
-    instrumentSelectorViews.put(selector, view);
+  public SdkMeterProviderBuilder setMeasurementProcessor(MeasurementProcessor processor) {
+    Objects.requireNonNull(processor, "processor");
+    this.processor = processor;
+    return this;
+  }
+
+  /**
+   * Registers a new {@link View} for processing measurements.
+   *
+   * @return this
+   */
+  @SuppressWarnings("unused")
+  public SdkMeterProviderBuilder registerView(View view) {
+    views.add(view);
     return this;
   }
 
@@ -105,9 +98,6 @@ public final class SdkMeterProviderBuilder {
    * @see GlobalMeterProvider
    */
   public SdkMeterProvider build() {
-    ViewRegistryBuilder viewRegistryBuilder = ViewRegistry.builder();
-    instrumentSelectorViews.forEach(viewRegistryBuilder::addView);
-    ViewRegistry viewRegistry = viewRegistryBuilder.build();
-    return new SdkMeterProvider(clock, resource, viewRegistry);
+    return new SdkMeterProvider(clock, resource, processor, Collections.unmodifiableList(views));
   }
 }

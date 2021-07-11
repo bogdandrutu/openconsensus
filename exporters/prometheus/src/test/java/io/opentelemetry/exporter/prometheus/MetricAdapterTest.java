@@ -37,6 +37,8 @@ import org.assertj.core.presentation.StandardRepresentation;
 import org.junit.jupiter.api.Test;
 
 /** Unit tests for {@link MetricAdapter}. */
+@SuppressWarnings("deprecation")
+// We support summaries here, still.
 class MetricAdapterTest {
 
   private static final Attributes KP_VP_ATTR = Attributes.of(stringKey("kp"), "vp");

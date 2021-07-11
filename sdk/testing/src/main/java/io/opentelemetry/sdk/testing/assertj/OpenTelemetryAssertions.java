@@ -28,12 +28,12 @@ public final class OpenTelemetryAssertions extends Assertions {
     return new AttributesAssert(attributes);
   }
 
-  /** Returns an assertion for {@link SpanDataAssert}. */
+  /** Returns an assertion for {@link SpanData}. */
   public static SpanDataAssert assertThat(SpanData spanData) {
     return new SpanDataAssert(spanData);
   }
 
-  /** Returns an assertion for {@link EventDataAssert}. */
+  /** Returns an assertion for {@link EventData}. */
   public static EventDataAssert assertThat(EventData eventData) {
     return new EventDataAssert(eventData);
   }

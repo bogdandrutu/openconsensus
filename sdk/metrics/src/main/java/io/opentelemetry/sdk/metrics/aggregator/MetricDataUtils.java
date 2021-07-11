@@ -6,67 +6,64 @@
 package io.opentelemetry.sdk.metrics.aggregator;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.metrics.common.Labels;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.sdk.metrics.data.DoubleExemplar;
 import io.opentelemetry.sdk.metrics.data.DoubleHistogramPointData;
 import io.opentelemetry.sdk.metrics.data.DoublePointData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData;
+import io.opentelemetry.sdk.metrics.data.Exemplar;
+import io.opentelemetry.sdk.metrics.data.LongExemplar;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
+import io.opentelemetry.sdk.metrics.instrument.DoubleMeasurement;
+import io.opentelemetry.sdk.metrics.instrument.LongMeasurement;
+import io.opentelemetry.sdk.metrics.instrument.Measurement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-final class MetricDataUtils {
+public class MetricDataUtils {
   private MetricDataUtils() {}
 
-  // Temporary workaround while new API/SDK is implemented.
-  static Attributes toAttributes(Labels labels) {
-    AttributesBuilder result = Attributes.builder();
-    labels.forEach(result::put);
-    return result.build();
-  }
-
   static List<LongPointData> toLongPointList(
-      Map<Labels, Long> accumulationMap, long startEpochNanos, long epochNanos) {
+      Map<Attributes, LongAccumulation> accumulationMap, long startEpochNanos, long epochNanos) {
     List<LongPointData> points = new ArrayList<>(accumulationMap.size());
     accumulationMap.forEach(
-        (labels, accumulation) ->
+        (attributes, accumulation) ->
             points.add(
                 LongPointData.create(
-                    startEpochNanos, epochNanos, toAttributes(labels), accumulation)));
+                    startEpochNanos,
+                    epochNanos,
+                    attributes,
+                    accumulation.getValue(),
+                    // TODO: We should preserve original recording time.
+                    toExemplarList(accumulation.getExemplars(), epochNanos, attributes))));
     return points;
   }
 
   static List<DoublePointData> toDoublePointList(
-      Map<Labels, Double> accumulationMap, long startEpochNanos, long epochNanos) {
+      Map<Attributes, DoubleAccumulation> accumulationMap, long startEpochNanos, long epochNanos) {
     List<DoublePointData> points = new ArrayList<>(accumulationMap.size());
     accumulationMap.forEach(
-        (labels, accumulation) ->
+        (attributes, accumulation) ->
             points.add(
                 DoublePointData.create(
-                    startEpochNanos, epochNanos, toAttributes(labels), accumulation)));
-    return points;
-  }
-
-  static List<DoubleSummaryPointData> toDoubleSummaryPointList(
-      Map<Labels, MinMaxSumCountAccumulation> accumulationMap,
-      long startEpochNanos,
-      long epochNanos) {
-    List<DoubleSummaryPointData> points = new ArrayList<>(accumulationMap.size());
-    accumulationMap.forEach(
-        (labels, aggregator) ->
-            points.add(aggregator.toPoint(startEpochNanos, epochNanos, labels)));
+                    startEpochNanos,
+                    epochNanos,
+                    attributes,
+                    accumulation.getValue(),
+                    // TODO: We should preserve original recording time.
+                    toExemplarList(accumulation.getExemplars(), epochNanos, attributes))));
     return points;
   }
 
   static List<DoubleHistogramPointData> toDoubleHistogramPointList(
-      Map<Labels, HistogramAccumulation> accumulationMap,
+      Map<Attributes, HistogramAccumulation> accumulationMap,
       long startEpochNanos,
       long epochNanos,
       List<Double> boundaries) {
     List<DoubleHistogramPointData> points = new ArrayList<>(accumulationMap.size());
     accumulationMap.forEach(
-        (labels, aggregator) -> {
+        (attributes, aggregator) -> {
           List<Long> counts = new ArrayList<>(aggregator.getCounts().length);
           for (long v : aggregator.getCounts()) {
             counts.add(v);
@@ -75,11 +72,36 @@ final class MetricDataUtils {
               DoubleHistogramPointData.create(
                   startEpochNanos,
                   epochNanos,
-                  toAttributes(labels),
+                  attributes,
                   aggregator.getSum(),
                   boundaries,
-                  counts));
+                  counts,
+                  // TODO: We should preserve original recording time.
+                  toExemplarList(aggregator.getExemplars(), epochNanos, attributes)));
         });
     return points;
+  }
+
+  static List<Exemplar> toExemplarList(
+      Iterable<Measurement> measurements, long epochNanos, Attributes aggregatedAttributes) {
+    List<Exemplar> exemplars = new ArrayList<>();
+    for (Measurement m : measurements) {
+      // TODO: Filter attributes not in aggregated set.
+      // We tried to implement this but ran afoul of some template-type-hell.
+      Attributes filtered = Attributes.empty();
+      final SpanContext spanContext = Span.fromContext(m.getContext()).getSpanContext();
+      String spanId = spanContext.isValid() ? spanContext.getSpanId() : null;
+      String traceId = spanContext.isValid() ? spanContext.getTraceId() : null;
+      if (m instanceof LongMeasurement) {
+        LongMeasurement measurement = (LongMeasurement) m;
+        exemplars.add(
+            LongExemplar.create(filtered, epochNanos, spanId, traceId, measurement.getValue()));
+      } else {
+        DoubleMeasurement measurement = (DoubleMeasurement) m;
+        exemplars.add(
+            DoubleExemplar.create(filtered, epochNanos, spanId, traceId, measurement.getValue()));
+      }
+    }
+    return exemplars;
   }
 }

@@ -5,32 +5,25 @@
 
 package io.opentelemetry.api.metrics;
 
-/** The {@code Builder} class for the {@code Instrument}. */
-public interface InstrumentBuilder {
+public interface InstrumentBuilder<InstrumentT> {
   /**
-   * Sets the description of the {@code Instrument}.
+   * Sets the description for this instrument.
    *
-   * <p>Default value is {@code ""}.
-   *
-   * @param description the description of the Instrument.
-   * @return this.
+   * <p>Description stirngs should follw the instrument description rules:
+   * https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-description
    */
-  InstrumentBuilder setDescription(String description);
-
+  public InstrumentBuilder<InstrumentT> setDescription(String description);
   /**
-   * Sets the unit of the {@code Instrument}.
+   * Set the unit of measure for this instrument.
    *
-   * <p>Default value is {@code "1"}.
-   *
-   * @param unit the unit of the Instrument.
-   * @return this.
+   * <p>Unit strings should follow the instrument unit rules:
+   * https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-unit
    */
-  InstrumentBuilder setUnit(String unit);
-
+  public InstrumentBuilder<InstrumentT> setUnit(String unit);
   /**
-   * Builds and returns a {@code Instrument} with the desired options.
+   * Builds and returns a {@code InstrumentT} with the desired options.
    *
-   * @return a {@code Instrument} with the desired options.
+   * @return a {@code InstrumentT} with the desired options.
    */
-  Instrument build();
+  public InstrumentT build();
 }

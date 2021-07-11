@@ -5,11 +5,12 @@
 
 package io.opentelemetry.sdk.logging.export;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BoundLongCounter;
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.common.Labels;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.internal.DaemonThreadFactory;
 import io.opentelemetry.sdk.logging.LogProcessor;
@@ -66,19 +67,23 @@ public final class BatchLogProcessor implements LogProcessor {
 
   private static class Worker implements Runnable {
     static {
-      Meter meter = GlobalMeterProvider.getMeter("io.opentelemetry.sdk.logging");
+      // TODO: As of Specification 1.4, this should have a telemetry schema version.
+      Meter meter = GlobalMeterProvider.get().meterBuilder("io.opentelemetry.sdk.trace").build();
       LongCounter logRecordsProcessed =
           meter
-              .longCounterBuilder("logRecordsProcessed")
+              .counterBuilder("logRecordsProcessed")
               .setUnit("1")
               .setDescription("Number of records processed")
               .build();
-      successCounter = logRecordsProcessed.bind(Labels.of("result", "success"));
+      AttributeKey<String> resultKey = AttributeKey.stringKey("result");
+      AttributeKey<String> causeKey = AttributeKey.stringKey("cause");
+      successCounter = logRecordsProcessed.bind(Attributes.of(resultKey, "success"));
       exporterFailureCounter =
           logRecordsProcessed.bind(
-              Labels.of("result", "dropped record", "cause", "exporter failure"));
+              Attributes.of(resultKey, "dropped record", causeKey, "exporter failure"));
       queueFullRecordCounter =
-          logRecordsProcessed.bind(Labels.of("result", "dropped record", "cause", "queue full"));
+          logRecordsProcessed.bind(
+              Attributes.of(resultKey, "dropped record", causeKey, "queue full"));
     }
 
     private static final BoundLongCounter exporterFailureCounter;

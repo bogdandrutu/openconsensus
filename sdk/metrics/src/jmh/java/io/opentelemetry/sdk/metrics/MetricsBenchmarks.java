@@ -5,8 +5,8 @@
 
 package io.opentelemetry.sdk.metrics;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.common.Labels;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -37,14 +37,15 @@ public class MetricsBenchmarks {
     @Param MetricsTestOperationBuilder opBuilder;
 
     MetricsTestOperationBuilder.Operation op;
-    final Labels sharedLabelSet = Labels.of("KEY", "VALUE");
-    Labels threadUniqueLabelSet;
+    final Attributes sharedLabelSet = Attributes.builder().put("KEY", "VALUE").build();
+    Attributes threadUniqueLabelSet;
 
     @Setup
     public void setup(ThreadParams threadParams) {
       Meter meter = sdk.getMeter();
       op = opBuilder.build(meter);
-      threadUniqueLabelSet = Labels.of("KEY", String.valueOf(threadParams.getThreadIndex()));
+      threadUniqueLabelSet =
+          Attributes.builder().put("KEY", String.valueOf(threadParams.getThreadIndex())).build();
     }
   }
 

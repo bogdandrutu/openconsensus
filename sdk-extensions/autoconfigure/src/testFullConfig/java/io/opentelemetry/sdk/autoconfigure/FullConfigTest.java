@@ -197,7 +197,7 @@ class FullConfigTest {
               .contains(
                   KeyValue.newBuilder()
                       .setKey("configured")
-                      .setValue(AnyValue.newBuilder().setStringValue("true").build())
+                      .setValue(AnyValue.newBuilder().setBoolValue(true).build())
                       .build());
         }
       }

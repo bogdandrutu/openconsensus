@@ -8,17 +8,17 @@ package io.opentelemetry.exporter.logging;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
+import io.opentelemetry.sdk.metrics.data.DoubleHistogramData;
+import io.opentelemetry.sdk.metrics.data.DoubleHistogramPointData;
 import io.opentelemetry.sdk.metrics.data.DoublePointData;
 import io.opentelemetry.sdk.metrics.data.DoubleSumData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.LongSumData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.metrics.data.ValueAtPercentile;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -36,6 +36,11 @@ import org.junit.jupiter.api.Test;
 class LoggingMetricExporterTest {
 
   LoggingMetricExporter exporter;
+
+  private static final AttributeKey<String> A = stringKey("a");
+  private static final AttributeKey<String> C = stringKey("c");
+  private static final AttributeKey<String> X = stringKey("x");
+  private static final AttributeKey<String> Z = stringKey("z");
 
   @BeforeEach
   void setUp() {
@@ -55,23 +60,22 @@ class LoggingMetricExporterTest {
         InstrumentationLibraryInfo.create("manualInstrumentation", "1.0");
     exporter.export(
         Arrays.asList(
-            MetricData.createDoubleSummary(
+            MetricData.createDoubleHistogram(
                 resource,
                 instrumentationLibraryInfo,
                 "measureOne",
                 "A summarized test measure",
                 "ms",
-                DoubleSummaryData.create(
+                DoubleHistogramData.create(
+                    AggregationTemporality.CUMULATIVE,
                     Collections.singletonList(
-                        DoubleSummaryPointData.create(
+                        DoubleHistogramPointData.create(
                             nowEpochNanos,
                             nowEpochNanos + 245,
-                            Attributes.of(stringKey("a"), "b", stringKey("c"), "d"),
+                            Attributes.of(A, "b", C, "d"),
                             1010,
-                            50000,
-                            Arrays.asList(
-                                ValueAtPercentile.create(0.0, 25),
-                                ValueAtPercentile.create(100.0, 433)))))),
+                            Arrays.asList(0d),
+                            Arrays.asList(0L, 2L))))),
             MetricData.createLongSum(
                 resource,
                 instrumentationLibraryInfo,
@@ -85,7 +89,7 @@ class LoggingMetricExporterTest {
                         LongPointData.create(
                             nowEpochNanos,
                             nowEpochNanos + 245,
-                            Attributes.of(stringKey("z"), "y", stringKey("x"), "w"),
+                            Attributes.of(Z, "y", X, "w"),
                             1010)))),
             MetricData.createDoubleSum(
                 resource,
@@ -100,7 +104,7 @@ class LoggingMetricExporterTest {
                         DoublePointData.create(
                             nowEpochNanos,
                             nowEpochNanos + 245,
-                            Attributes.of(stringKey("1"), "2", stringKey("3"), "4"),
+                            Attributes.of(A, "2", C, "4"),
                             33.7767))))));
   }
 

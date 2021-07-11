@@ -9,8 +9,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.linecorp.armeria.client.WebClient;
 import com.linecorp.armeria.common.AggregatedHttpResponse;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
-import io.opentelemetry.api.metrics.common.Labels;
 import java.io.IOException;
 import java.net.ServerSocket;
 import org.junit.jupiter.api.Test;
@@ -37,9 +37,9 @@ class PrometheusTest {
 
     GlobalMeterProvider.get()
         .get("test")
-        .longValueObserverBuilder("test")
-        .setUpdater(result -> result.observe(2, Labels.empty()))
-        .build();
+        .gaugeBuilder("test")
+        .ofLongs()
+        .buildWithCallback(result -> result.observe(2, Attributes.empty()));
 
     WebClient client = WebClient.of("http://127.0.0.1:" + port);
     AggregatedHttpResponse response = client.get("/metrics").aggregate().join();

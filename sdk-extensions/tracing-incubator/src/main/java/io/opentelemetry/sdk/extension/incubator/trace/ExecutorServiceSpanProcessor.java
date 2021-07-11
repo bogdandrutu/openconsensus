@@ -5,11 +5,12 @@
 
 package io.opentelemetry.sdk.extension.incubator.trace;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BoundLongCounter;
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.common.Labels;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
@@ -35,15 +36,17 @@ import org.jctools.queues.MpscArrayQueue;
 @SuppressWarnings("FutureReturnValueIgnored")
 public final class ExecutorServiceSpanProcessor implements SpanProcessor {
 
-  private static final String SPAN_PROCESSOR_TYPE_LABEL = "spanProcessorType";
+  private static final AttributeKey<String> SPAN_PROCESSOR_TYPE_KEY =
+      AttributeKey.stringKey("spanProcessorType");
+  private static final AttributeKey<Boolean> DROPPED_KEY = AttributeKey.booleanKey("dropped");
   private static final String SPAN_PROCESSOR_TYPE_VALUE =
       ExecutorServiceSpanProcessor.class.getSimpleName();
-  private static final Labels SPAN_PROCESSOR_LABELS =
-      Labels.of(SPAN_PROCESSOR_TYPE_LABEL, SPAN_PROCESSOR_TYPE_VALUE);
-  private static final Labels SPAN_PROCESSOR_DROPPED_LABELS =
-      Labels.of(SPAN_PROCESSOR_TYPE_LABEL, SPAN_PROCESSOR_TYPE_VALUE, "dropped", "true");
-  private static final Labels SPAN_PROCESSOR_EXPORTED_LABELS =
-      Labels.of(SPAN_PROCESSOR_TYPE_LABEL, SPAN_PROCESSOR_TYPE_VALUE, "dropped", "false");
+  private static final Attributes SPAN_PROCESSOR_LABELS =
+      Attributes.of(SPAN_PROCESSOR_TYPE_KEY, SPAN_PROCESSOR_TYPE_VALUE);
+  private static final Attributes SPAN_PROCESSOR_DROPPED_LABELS =
+      Attributes.of(SPAN_PROCESSOR_TYPE_KEY, SPAN_PROCESSOR_TYPE_VALUE, DROPPED_KEY, true);
+  private static final Attributes SPAN_PROCESSOR_EXPORTED_LABELS =
+      Attributes.of(SPAN_PROCESSOR_TYPE_KEY, SPAN_PROCESSOR_TYPE_VALUE, DROPPED_KEY, false);
 
   private final Worker worker;
   private final AtomicBoolean isShutdown = new AtomicBoolean(false);
@@ -163,16 +166,17 @@ public final class ExecutorServiceSpanProcessor implements SpanProcessor {
         ScheduledExecutorService executorService,
         AtomicBoolean isShutdown,
         long workerScheduleIntervalNanos) {
-      Meter meter = GlobalMeterProvider.getMeter("io.opentelemetry.sdk.trace");
+      // TODO: As of Specification 1.4, this should have a telemetry schema version.
+      Meter meter = GlobalMeterProvider.get().meterBuilder("io.opentelemetry.sdk.trace").build();
       meter
-          .longValueObserverBuilder("queueSize")
+          .gaugeBuilder("queueSize")
+          .ofLongs()
           .setDescription("The number of spans queued")
           .setUnit("1")
-          .setUpdater(result -> result.observe(queue.size(), SPAN_PROCESSOR_LABELS))
-          .build();
+          .buildWithCallback(result -> result.observe(queue.size(), SPAN_PROCESSOR_LABELS));
       LongCounter processedSpansCounter =
           meter
-              .longCounterBuilder("processedSpans")
+              .counterBuilder("processedSpans")
               .setUnit("1")
               .setDescription(
                   "The number of spans processed by the BatchSpanProcessor. "

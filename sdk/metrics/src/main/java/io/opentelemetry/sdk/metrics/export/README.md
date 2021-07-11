@@ -1,5 +1,7 @@
 # OpenTelemetry metrics export framework
 
+*Note: This is a pulled-forward version of the previous metric export SDK.  All information is subject to change.*
+
 The metrics world split between "pushed based" and "pull based" libraries and backends, and because
 of this, the OpenTelemetry export framework needs to address all the possible combinations.
 

@@ -9,14 +9,12 @@ import static io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions.asse
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.common.Labels;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
-import io.opentelemetry.sdk.metrics.aggregator.AbstractSumAggregator.MergeStrategy;
-import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
-import io.opentelemetry.sdk.metrics.common.InstrumentType;
-import io.opentelemetry.sdk.metrics.common.InstrumentValueType;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.instrument.DoubleMeasurement;
+import io.opentelemetry.sdk.metrics.instrument.InstrumentType;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -25,53 +23,59 @@ import org.junit.jupiter.api.Test;
 class DoubleSumAggregatorTest {
   private static final DoubleSumAggregator aggregator =
       new DoubleSumAggregator(
+          SumConfig.builder()
+              .setName("name")
+              .setDescription("description")
+              .setUnit("unit")
+              .setMonotonic(true)
+              .setTemporality(AggregationTemporality.CUMULATIVE)
+              .setMeasurementTemporality(AggregationTemporality.DELTA)
+              .build(),
           Resource.getDefault(),
           InstrumentationLibraryInfo.empty(),
-          InstrumentDescriptor.create(
-              "name", "description", "unit", InstrumentType.COUNTER, InstrumentValueType.DOUBLE),
-          AggregationTemporality.CUMULATIVE);
+          ExemplarSampler.NEVER);
 
   @Test
-  void createHandle() {
-    assertThat(aggregator.createHandle()).isInstanceOf(DoubleSumAggregator.Handle.class);
+  void createStreamStorage() {
+    assertThat(aggregator.createStreamStorage()).isInstanceOf(DoubleSumAggregator.MyHandle.class);
   }
 
   @Test
   void multipleRecords() {
-    AggregatorHandle<Double> aggregatorHandle = aggregator.createHandle();
-    aggregatorHandle.recordDouble(12.1);
-    aggregatorHandle.recordDouble(12.1);
-    aggregatorHandle.recordDouble(12.1);
-    aggregatorHandle.recordDouble(12.1);
-    aggregatorHandle.recordDouble(12.1);
-    assertThat(aggregatorHandle.accumulateThenReset()).isEqualTo(12.1 * 5);
+    SynchronousHandle<DoubleAccumulation> aggregatorHandle = aggregator.createStreamStorage();
+    aggregatorHandle.record(raw(12.1));
+    aggregatorHandle.record(raw(12.1));
+    aggregatorHandle.record(raw(12.1));
+    aggregatorHandle.record(raw(12.1));
+    aggregatorHandle.record(raw(12.1));
+    assertThat(aggregatorHandle.accumulateThenReset()).isEqualTo(agg(12.1 * 5));
   }
 
   @Test
   void multipleRecords_WithNegatives() {
-    AggregatorHandle<Double> aggregatorHandle = aggregator.createHandle();
-    aggregatorHandle.recordDouble(12);
-    aggregatorHandle.recordDouble(12);
-    aggregatorHandle.recordDouble(-23);
-    aggregatorHandle.recordDouble(12);
-    aggregatorHandle.recordDouble(12);
-    aggregatorHandle.recordDouble(-11);
-    assertThat(aggregatorHandle.accumulateThenReset()).isEqualTo(14);
+    SynchronousHandle<DoubleAccumulation> aggregatorHandle = aggregator.createStreamStorage();
+    aggregatorHandle.record(raw(12));
+    aggregatorHandle.record(raw(12));
+    aggregatorHandle.record(raw(-23));
+    aggregatorHandle.record(raw(12));
+    aggregatorHandle.record(raw(12));
+    aggregatorHandle.record(raw(-11));
+    assertThat(aggregatorHandle.accumulateThenReset()).isEqualTo(agg(14));
   }
 
   @Test
   void toAccumulationAndReset() {
-    AggregatorHandle<Double> aggregatorHandle = aggregator.createHandle();
+    SynchronousHandle<DoubleAccumulation> aggregatorHandle = aggregator.createStreamStorage();
     assertThat(aggregatorHandle.accumulateThenReset()).isNull();
 
-    aggregatorHandle.recordDouble(13);
-    aggregatorHandle.recordDouble(12);
-    assertThat(aggregatorHandle.accumulateThenReset()).isEqualTo(25);
+    aggregatorHandle.record(raw(13));
+    aggregatorHandle.record(raw(12));
+    assertThat(aggregatorHandle.accumulateThenReset()).isEqualTo(agg(25));
     assertThat(aggregatorHandle.accumulateThenReset()).isNull();
 
-    aggregatorHandle.recordDouble(12);
-    aggregatorHandle.recordDouble(-25);
-    assertThat(aggregatorHandle.accumulateThenReset()).isEqualTo(-13);
+    aggregatorHandle.record(raw(12));
+    aggregatorHandle.record(raw(-25));
+    assertThat(aggregatorHandle.accumulateThenReset()).isEqualTo(agg(-13));
     assertThat(aggregatorHandle.accumulateThenReset()).isNull();
   }
 
@@ -81,32 +85,38 @@ class DoubleSumAggregatorTest {
       for (AggregationTemporality temporality : AggregationTemporality.values()) {
         DoubleSumAggregator aggregator =
             new DoubleSumAggregator(
+                SumConfig.builder()
+                    .setName("name")
+                    .setDescription("description")
+                    .setUnit("unit")
+                    .setMonotonic(true)
+                    .setTemporality(temporality)
+                    .setMeasurementTemporality(
+                        // TODO use: instrumentType
+                        AggregationTemporality.DELTA)
+                    .build(),
                 Resource.getDefault(),
                 InstrumentationLibraryInfo.empty(),
-                InstrumentDescriptor.create(
-                    "name", "description", "unit", instrumentType, InstrumentValueType.LONG),
-                temporality);
-        MergeStrategy expectedMergeStrategy =
-            AbstractSumAggregator.resolveMergeStrategy(instrumentType, temporality);
-        double merged = aggregator.merge(1.0d, 2.0d);
-        assertThat(merged)
+                ExemplarSampler.NEVER);
+        DoubleAccumulation merged = aggregator.merge(agg(1), agg(2));
+        assertThat(merged.getValue())
             .withFailMessage(
                 "Invalid merge result for instrumentType %s, temporality %s: %s",
                 instrumentType, temporality, merged)
-            .isEqualTo(expectedMergeStrategy == MergeStrategy.SUM ? 3.0d : 1.0d);
+            .isEqualTo(3.0d);
       }
     }
   }
 
   @Test
   @SuppressWarnings("unchecked")
-  void toMetricData() {
-    AggregatorHandle<Double> aggregatorHandle = aggregator.createHandle();
-    aggregatorHandle.recordDouble(10);
+  void buildMetric() {
+    SynchronousHandle<DoubleAccumulation> aggregatorHandle = aggregator.createStreamStorage();
+    aggregatorHandle.record(raw(10));
 
     MetricData metricData =
-        aggregator.toMetricData(
-            Collections.singletonMap(Labels.empty(), aggregatorHandle.accumulateThenReset()),
+        aggregator.buildMetric(
+            Collections.singletonMap(Attributes.empty(), aggregatorHandle.accumulateThenReset()),
             0,
             10,
             100);
@@ -122,5 +132,13 @@ class DoubleSumAggregatorTest {
                     .hasEpochNanos(100)
                     .hasAttributes(Attributes.empty())
                     .hasValue(10));
+  }
+
+  private static DoubleMeasurement raw(double value) {
+    return DoubleMeasurement.create(value, Attributes.empty(), Context.root());
+  }
+
+  private static DoubleAccumulation agg(double value) {
+    return DoubleAccumulation.create(value);
   }
 }

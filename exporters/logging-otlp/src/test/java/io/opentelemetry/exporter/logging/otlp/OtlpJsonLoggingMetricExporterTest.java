@@ -5,10 +5,10 @@
 
 package io.opentelemetry.exporter.logging.otlp;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.netmikey.logunit.api.LogCapturer;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
@@ -29,6 +29,8 @@ class OtlpJsonLoggingMetricExporterTest {
   private static final Resource RESOURCE =
       Resource.create(Attributes.builder().put("key", "value").build());
 
+  private static final AttributeKey<String> CAT_KEY = AttributeKey.stringKey("cat");
+
   private static final MetricData METRIC1 =
       MetricData.createDoubleSum(
           RESOURCE,
@@ -39,8 +41,7 @@ class OtlpJsonLoggingMetricExporterTest {
           DoubleSumData.create(
               true,
               AggregationTemporality.CUMULATIVE,
-              Arrays.asList(
-                  DoublePointData.create(1, 2, Attributes.of(stringKey("cat"), "meow"), 4))));
+              Arrays.asList(DoublePointData.create(1, 2, Attributes.of(CAT_KEY, "meow"), 4))));
 
   private static final MetricData METRIC2 =
       MetricData.createDoubleSum(
@@ -52,8 +53,7 @@ class OtlpJsonLoggingMetricExporterTest {
           DoubleSumData.create(
               true,
               AggregationTemporality.CUMULATIVE,
-              Arrays.asList(
-                  DoublePointData.create(1, 2, Attributes.of(stringKey("cat"), "meow"), 4))));
+              Arrays.asList(DoublePointData.create(1, 2, Attributes.of(CAT_KEY, "meow"), 4))));
 
   @RegisterExtension
   LogCapturer logs = LogCapturer.create().captureForType(OtlpJsonLoggingMetricExporter.class);

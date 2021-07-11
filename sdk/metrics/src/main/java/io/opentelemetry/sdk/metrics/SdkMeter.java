@@ -5,15 +5,29 @@
 
 package io.opentelemetry.sdk.metrics;
 
+import io.opentelemetry.api.metrics.CounterBuilder;
+import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.GaugeBuilder;
+import io.opentelemetry.api.metrics.HistogramBuilder;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.api.metrics.UpDownCounterBuilder;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.state.InstrumentStorage;
+import io.opentelemetry.sdk.metrics.state.InstrumentStorageRegistry;
+import io.opentelemetry.sdk.metrics.state.MeterProviderSharedState;
+import io.opentelemetry.sdk.metrics.state.MeterSharedState;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /** {@link SdkMeter} is SDK implementation of {@link Meter}. */
-final class SdkMeter implements Meter {
+public class SdkMeter implements Meter {
   private final MeterProviderSharedState meterProviderSharedState;
   private final MeterSharedState meterSharedState;
 
@@ -24,82 +38,37 @@ final class SdkMeter implements Meter {
     this.meterSharedState = MeterSharedState.create(instrumentationLibraryInfo);
   }
 
-  InstrumentationLibraryInfo getInstrumentationLibraryInfo() {
-    return meterSharedState.getInstrumentationLibraryInfo();
+  @Override
+  public CounterBuilder<LongCounter, ObservableLongMeasurement> counterBuilder(String name) {
+    return new SdkCounterBuilder<>(meterProviderSharedState, meterSharedState, name);
   }
 
   @Override
-  public DoubleCounterSdk.Builder doubleCounterBuilder(String name) {
-    return new DoubleCounterSdk.Builder(name, meterProviderSharedState, meterSharedState);
+  public UpDownCounterBuilder<LongUpDownCounter, ObservableLongMeasurement> upDownCounterBuilder(
+      String name) {
+    return new SdkUpDownCounterBuilder<>(meterProviderSharedState, meterSharedState, name);
   }
 
   @Override
-  public LongCounterSdk.Builder longCounterBuilder(String name) {
-    return new LongCounterSdk.Builder(name, meterProviderSharedState, meterSharedState);
+  public HistogramBuilder<DoubleHistogram> histogramBuilder(String name) {
+    return new SdkHistogramBuilder<>(meterProviderSharedState, meterSharedState, name);
   }
 
   @Override
-  public DoubleUpDownCounterSdk.Builder doubleUpDownCounterBuilder(String name) {
-    return new DoubleUpDownCounterSdk.Builder(name, meterProviderSharedState, meterSharedState);
-  }
-
-  @Override
-  public LongUpDownCounterSdk.Builder longUpDownCounterBuilder(String name) {
-    return new LongUpDownCounterSdk.Builder(name, meterProviderSharedState, meterSharedState);
-  }
-
-  @Override
-  public DoubleValueRecorderSdk.Builder doubleValueRecorderBuilder(String name) {
-    return new DoubleValueRecorderSdk.Builder(name, meterProviderSharedState, meterSharedState);
-  }
-
-  @Override
-  public LongValueRecorderSdk.Builder longValueRecorderBuilder(String name) {
-    return new LongValueRecorderSdk.Builder(name, meterProviderSharedState, meterSharedState);
-  }
-
-  @Override
-  public DoubleSumObserverSdk.Builder doubleSumObserverBuilder(String name) {
-    return new DoubleSumObserverSdk.Builder(name, meterProviderSharedState, meterSharedState);
-  }
-
-  @Override
-  public LongSumObserverSdk.Builder longSumObserverBuilder(String name) {
-    return new LongSumObserverSdk.Builder(name, meterProviderSharedState, meterSharedState);
-  }
-
-  @Override
-  public DoubleUpDownSumObserverSdk.Builder doubleUpDownSumObserverBuilder(String name) {
-    return new DoubleUpDownSumObserverSdk.Builder(name, meterProviderSharedState, meterSharedState);
-  }
-
-  @Override
-  public LongUpDownSumObserverSdk.Builder longUpDownSumObserverBuilder(String name) {
-    return new LongUpDownSumObserverSdk.Builder(name, meterProviderSharedState, meterSharedState);
-  }
-
-  @Override
-  public DoubleValueObserverSdk.Builder doubleValueObserverBuilder(String name) {
-    return new DoubleValueObserverSdk.Builder(name, meterProviderSharedState, meterSharedState);
-  }
-
-  @Override
-  public LongValueObserverSdk.Builder longValueObserverBuilder(String name) {
-    return new LongValueObserverSdk.Builder(name, meterProviderSharedState, meterSharedState);
-  }
-
-  @Override
-  public BatchRecorderSdk newBatchRecorder(String... keyValuePairs) {
-    return new BatchRecorderSdk(keyValuePairs);
+  public GaugeBuilder<ObservableDoubleMeasurement> gaugeBuilder(String name) {
+    return new SdkGaugeBuilder<>(meterProviderSharedState, meterSharedState, name);
   }
 
   /** Collects all the metric recordings that changed since the previous call. */
-  Collection<MetricData> collectAll(long epochNanos) {
-    InstrumentRegistry instrumentRegistry = meterSharedState.getInstrumentRegistry();
-    Collection<AbstractInstrument> instruments = instrumentRegistry.getInstruments();
+  Collection<MetricData> collectAll(
+      CollectionHandle collector, Set<CollectionHandle> allCollectors, long epochNanos) {
+    InstrumentStorageRegistry instrumentRegistry = meterSharedState.getInstrumentStorageRegistry();
+    Collection<InstrumentStorage> instruments = instrumentRegistry.getInstruments();
     List<MetricData> result = new ArrayList<>(instruments.size());
-    for (AbstractInstrument instrument : instruments) {
-      result.addAll(instrument.collectAll(epochNanos));
+    for (InstrumentStorage instrument : instruments) {
+      result.addAll(
+          instrument.collectAndReset(
+              collector, allCollectors, meterProviderSharedState.getStartEpochNanos(), epochNanos));
     }
     return result;
   }

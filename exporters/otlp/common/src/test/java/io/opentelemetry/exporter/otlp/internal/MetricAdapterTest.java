@@ -36,14 +36,12 @@ import io.opentelemetry.sdk.metrics.data.DoubleHistogramData;
 import io.opentelemetry.sdk.metrics.data.DoubleHistogramPointData;
 import io.opentelemetry.sdk.metrics.data.DoublePointData;
 import io.opentelemetry.sdk.metrics.data.DoubleSumData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryData;
 import io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData;
 import io.opentelemetry.sdk.metrics.data.LongExemplar;
 import io.opentelemetry.sdk.metrics.data.LongGaugeData;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.LongSumData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.metrics.data.ValueAtPercentile;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.Arrays;
 import java.util.Collections;
@@ -156,17 +154,21 @@ class MetricAdapterTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation")
+  // Summary Data is deprecated.
   void toSummaryDataPoints() {
     assertThat(
             MetricAdapter.toSummaryDataPoints(
                 singletonList(
-                    DoubleSummaryPointData.create(
+                    io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData.create(
                         123,
                         456,
                         KV_ATTR,
                         5,
                         14.2,
-                        singletonList(ValueAtPercentile.create(0.0, 1.1))))))
+                        singletonList(
+                            io.opentelemetry.sdk.metrics.data.ValueAtPercentile.create(
+                                0.0, 1.1))))))
         .containsExactly(
             SummaryDataPoint.newBuilder()
                 .setStartTimeUnixNano(123)
@@ -194,8 +196,9 @@ class MetricAdapterTest {
                         9,
                         18.3,
                         ImmutableList.of(
-                            ValueAtPercentile.create(0.0, 1.1),
-                            ValueAtPercentile.create(100.0, 20.3))))))
+                            io.opentelemetry.sdk.metrics.data.ValueAtPercentile.create(0.0, 1.1),
+                            io.opentelemetry.sdk.metrics.data.ValueAtPercentile.create(
+                                100.0, 20.3))))))
         .containsExactly(
             SummaryDataPoint.newBuilder()
                 .setStartTimeUnixNano(123)
@@ -496,6 +499,8 @@ class MetricAdapterTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation")
+  // Summary metric is deprecated.
   void toProtoMetric_summary() {
     assertThat(
             MetricAdapter.toProtoMetric(
@@ -505,17 +510,19 @@ class MetricAdapterTest {
                     "name",
                     "description",
                     "1",
-                    DoubleSummaryData.create(
+                    io.opentelemetry.sdk.metrics.data.DoubleSummaryData.create(
                         singletonList(
-                            DoubleSummaryPointData.create(
+                            io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData.create(
                                 123,
                                 456,
                                 KV_ATTR,
                                 5,
                                 33d,
                                 ImmutableList.of(
-                                    ValueAtPercentile.create(0, 1.1),
-                                    ValueAtPercentile.create(100.0, 20.3))))))))
+                                    io.opentelemetry.sdk.metrics.data.ValueAtPercentile.create(
+                                        0, 1.1),
+                                    io.opentelemetry.sdk.metrics.data.ValueAtPercentile.create(
+                                        100.0, 20.3))))))))
         .isEqualTo(
             Metric.newBuilder()
                 .setName("name")

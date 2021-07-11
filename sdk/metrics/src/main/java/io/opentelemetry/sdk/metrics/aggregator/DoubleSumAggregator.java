@@ -5,79 +5,127 @@
 
 package io.opentelemetry.sdk.metrics.aggregator;
 
-import io.opentelemetry.api.metrics.common.Labels;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
-import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.DoubleSumData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.instrument.Measurement;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.Map;
 import java.util.concurrent.atomic.DoubleAdder;
 
-final class DoubleSumAggregator extends AbstractSumAggregator<Double> {
-  DoubleSumAggregator(
+/**
+ * An aggregator which returns Sum metrics.
+ *
+ * <p>This aggregator supports generating DELTA or CUMULATIVE sums, as well as monotonic or
+ * non-monotonic.
+ */
+public class DoubleSumAggregator implements Aggregator<DoubleAccumulation> {
+  private final SumConfig config;
+  private final Resource resource;
+  private final InstrumentationLibraryInfo instrumentationLibrary;
+  private final ExemplarSampler sampler;
+
+  /**
+   * Construct a sum from measurements.
+   *
+   * @param config Configuration for the sum aggregation.
+   * @param resource Resource to assocaiate metrics.
+   * @param instrumentationLibrary InstrumentationLibrary to associate metrics.
+   * @param sampler When/how to pull Exemplars.
+   */
+  public DoubleSumAggregator(
+      SumConfig config,
       Resource resource,
-      InstrumentationLibraryInfo instrumentationLibraryInfo,
-      InstrumentDescriptor descriptor,
-      AggregationTemporality temporality) {
-    super(resource, instrumentationLibraryInfo, descriptor, temporality);
+      InstrumentationLibraryInfo instrumentationLibrary,
+      ExemplarSampler sampler) {
+    this.config = config;
+    this.resource = resource;
+    this.instrumentationLibrary = instrumentationLibrary;
+    this.sampler = sampler;
   }
 
   @Override
-  public AggregatorHandle<Double> createHandle() {
-    return new Handle();
+  public SynchronousHandle<DoubleAccumulation> createStreamStorage() {
+    return new MyHandle(sampler);
   }
 
   @Override
-  public Double accumulateDouble(double value) {
-    return value;
+  public DoubleAccumulation asyncAccumulation(Measurement measurement) {
+    // TODO: Use measurement as exemplar?
+    return DoubleAccumulation.create(measurement.asDouble().getValue());
+  }
+
+  // Note:  Storage handle has high contention and need atomic increments.
+  static class MyHandle extends SynchronousHandle<DoubleAccumulation> {
+    private final DoubleAdder count = new DoubleAdder();
+
+    MyHandle(ExemplarSampler sampler) {
+      super(sampler);
+    }
+
+    @Override
+    protected void doRecord(Measurement value) {
+      count.add(value.asDouble().getValue());
+    }
+
+    @Override
+    protected DoubleAccumulation doAccumulateThenReset(Iterable<Measurement> exemplars) {
+      return DoubleAccumulation.create(count.sumThenReset(), exemplars);
+    }
   }
 
   @Override
-  Double mergeSum(Double previousAccumulation, Double accumulation) {
-    return previousAccumulation + accumulation;
+  public DoubleAccumulation merge(DoubleAccumulation current, DoubleAccumulation accumulated) {
+    // Drop previous exemplars when aggregating.
+    return DoubleAccumulation.create(
+        current.getValue() + accumulated.getValue(), current.getExemplars());
   }
 
   @Override
-  Double mergeDiff(Double previousAccumulation, Double accumulation) {
-    return accumulation - previousAccumulation;
-  }
-
-  @Override
-  public MetricData toMetricData(
-      Map<Labels, Double> accumulationByLabels,
+  public MetricData buildMetric(
+      Map<Attributes, DoubleAccumulation> accumulated,
       long startEpochNanos,
-      long lastCollectionEpoch,
+      long lastEpochNanos,
       long epochNanos) {
     return MetricData.createDoubleSum(
-        getResource(),
-        getInstrumentationLibraryInfo(),
-        getInstrumentDescriptor().getName(),
-        getInstrumentDescriptor().getDescription(),
-        getInstrumentDescriptor().getUnit(),
+        resource,
+        instrumentationLibrary,
+        config.getName(),
+        config.getDescription(),
+        config.getUnit(),
         DoubleSumData.create(
-            isMonotonic(),
-            temporality(),
+            config.isMonotonic(),
+            config.getTemporality(),
             MetricDataUtils.toDoublePointList(
-                accumulationByLabels,
-                temporality() == AggregationTemporality.CUMULATIVE
+                accumulated,
+                config.getTemporality() == AggregationTemporality.CUMULATIVE
                     ? startEpochNanos
-                    : lastCollectionEpoch,
+                    : lastEpochNanos,
                 epochNanos)));
   }
 
-  static final class Handle extends AggregatorHandle<Double> {
-    private final DoubleAdder current = new DoubleAdder();
+  @Override
+  public Map<Attributes, DoubleAccumulation> diffPrevious(
+      Map<Attributes, DoubleAccumulation> previous,
+      Map<Attributes, DoubleAccumulation> current,
+      boolean isAsynchronousMeasurement) {
+    if (config.getTemporality() == AggregationTemporality.CUMULATIVE
+        && !isAsynchronousMeasurement) {
 
-    @Override
-    protected Double doAccumulateThenReset() {
-      return this.current.sumThenReset();
+      // TODO: MERGE EVERYTHING!
+      previous.forEach(
+          (k, v) -> {
+            if (current.containsKey(k)) {
+              current.put(k, merge(current.get(k), v));
+            } else {
+              current.put(k, v);
+            }
+          });
     }
+    // TODO: IF asynch + delta, then diff.
 
-    @Override
-    protected void doRecordDouble(double value) {
-      current.add(value);
-    }
+    return current;
   }
 }

@@ -7,6 +7,7 @@ package io.opentelemetry.sdk.trace.export;
 
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.export.MetricProducer;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import org.openjdk.jmh.annotations.AuxCounters;
@@ -27,7 +28,7 @@ public class BatchSpanProcessorDroppedSpansBenchmark {
 
   @State(Scope.Benchmark)
   public static class BenchmarkState {
-    private SdkMeterProvider sdkMeterProvider;
+    private MetricProducer collector;
     private BatchSpanProcessor processor;
     private Tracer tracer;
     private double dropRatio;
@@ -37,7 +38,8 @@ public class BatchSpanProcessorDroppedSpansBenchmark {
 
     @Setup(Level.Iteration)
     public final void setup() {
-      sdkMeterProvider = SdkMeterProvider.builder().buildAndRegisterGlobal();
+      final SdkMeterProvider sdkMeterProvider = SdkMeterProvider.builder().buildAndRegisterGlobal();
+      collector = sdkMeterProvider.newMetricProducer();
       SpanExporter exporter = new DelayingSpanExporter(0);
       processor = BatchSpanProcessor.builder(exporter).build();
 
@@ -47,7 +49,7 @@ public class BatchSpanProcessorDroppedSpansBenchmark {
     @TearDown(Level.Iteration)
     public final void recordMetrics() {
       BatchSpanProcessorMetrics metrics =
-          new BatchSpanProcessorMetrics(sdkMeterProvider.collectAllMetrics(), numThreads);
+          new BatchSpanProcessorMetrics(collector.collectAllMetrics(), numThreads);
       dropRatio = metrics.dropRatio();
       exportedSpans = metrics.exportedSpans();
       droppedSpans = metrics.droppedSpans();

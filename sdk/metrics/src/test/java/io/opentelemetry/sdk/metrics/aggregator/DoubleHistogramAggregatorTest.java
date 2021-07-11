@@ -8,14 +8,14 @@ package io.opentelemetry.sdk.metrics.aggregator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import io.opentelemetry.api.metrics.common.Labels;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
-import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
-import io.opentelemetry.sdk.metrics.common.InstrumentType;
-import io.opentelemetry.sdk.metrics.common.InstrumentValueType;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.MetricDataType;
+import io.opentelemetry.sdk.metrics.instrument.DoubleMeasurement;
+import io.opentelemetry.sdk.metrics.instrument.LongMeasurement;
+import io.opentelemetry.sdk.metrics.instrument.Measurement;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.Collections;
 import java.util.concurrent.Executors;
@@ -29,65 +29,61 @@ public class DoubleHistogramAggregatorTest {
   private static final double[] boundaries = new double[] {10.0, 100.0, 1000.0};
   private static final DoubleHistogramAggregator aggregator =
       new DoubleHistogramAggregator(
+          HistogramConfig.builder()
+              .setName("name")
+              .setDescription("description")
+              .setUnit("unit")
+              .setBoundaries(boundaries)
+              .setTemporality(AggregationTemporality.DELTA)
+              .build(),
           Resource.getDefault(),
           InstrumentationLibraryInfo.empty(),
-          InstrumentDescriptor.create(
-              "name",
-              "description",
-              "unit",
-              InstrumentType.VALUE_RECORDER,
-              InstrumentValueType.LONG),
-          boundaries,
-          /* stateful= */ false);
+          ExemplarSampler.NEVER);
 
   @Test
-  void createHandle() {
-    assertThat(aggregator.createHandle()).isInstanceOf(DoubleHistogramAggregator.Handle.class);
+  void createStreamStorage() {
+    assertThat(aggregator.createStreamStorage())
+        .isInstanceOf(DoubleHistogramAggregator.MyHandle.class);
   }
 
   @Test
   void testRecordings() {
-    AggregatorHandle<HistogramAccumulation> aggregatorHandle = aggregator.createHandle();
-    aggregatorHandle.recordLong(20);
-    aggregatorHandle.recordLong(5);
-    aggregatorHandle.recordLong(150);
-    aggregatorHandle.recordLong(2000);
+    SynchronousHandle<HistogramAccumulation> aggregatorHandle = aggregator.createStreamStorage();
+    aggregatorHandle.record(raw(20));
+    aggregatorHandle.record(raw(5));
+    aggregatorHandle.record(raw(150));
+    aggregatorHandle.record(raw(2000));
     assertThat(aggregatorHandle.accumulateThenReset())
-        .isEqualTo(HistogramAccumulation.create(2175, new long[] {1, 1, 1, 1}));
+        .isEqualTo(
+            HistogramAccumulation.create(2175, new long[] {1, 1, 1, 1}, Collections.emptyList()));
   }
 
   @Test
   void toAccumulationAndReset() {
-    AggregatorHandle<HistogramAccumulation> aggregatorHandle = aggregator.createHandle();
+    SynchronousHandle<HistogramAccumulation> aggregatorHandle = aggregator.createStreamStorage();
     assertThat(aggregatorHandle.accumulateThenReset()).isNull();
 
-    aggregatorHandle.recordLong(100);
+    aggregatorHandle.record(raw(100));
     assertThat(aggregatorHandle.accumulateThenReset())
-        .isEqualTo(HistogramAccumulation.create(100, new long[] {0, 1, 0, 0}));
+        .isEqualTo(
+            HistogramAccumulation.create(100, new long[] {0, 1, 0, 0}, Collections.emptyList()));
     assertThat(aggregatorHandle.accumulateThenReset()).isNull();
 
-    aggregatorHandle.recordLong(0);
+    aggregatorHandle.record(raw(0));
     assertThat(aggregatorHandle.accumulateThenReset())
-        .isEqualTo(HistogramAccumulation.create(0, new long[] {1, 0, 0, 0}));
+        .isEqualTo(
+            HistogramAccumulation.create(0, new long[] {1, 0, 0, 0}, Collections.emptyList()));
     assertThat(aggregatorHandle.accumulateThenReset()).isNull();
   }
 
   @Test
-  void accumulateData() {
-    assertThat(aggregator.accumulateDouble(11.1))
-        .isEqualTo(HistogramAccumulation.create(11.1, new long[] {0, 1, 0, 0}));
-    assertThat(aggregator.accumulateLong(10))
-        .isEqualTo(HistogramAccumulation.create(10.0, new long[] {1, 0, 0, 0}));
-  }
-
-  @Test
-  void toMetricData() {
-    AggregatorHandle<HistogramAccumulation> aggregatorHandle = aggregator.createHandle();
-    aggregatorHandle.recordLong(10);
+  void buildMetric() {
+    SynchronousHandle<HistogramAccumulation> aggregatorHandle = aggregator.createStreamStorage();
+    aggregatorHandle.record(raw(10d));
 
     MetricData metricData =
-        aggregator.toMetricData(
-            Collections.singletonMap(Labels.empty(), aggregatorHandle.accumulateThenReset()),
+        aggregator.buildMetric(
+            Collections.singletonMap(Attributes.empty(), aggregatorHandle.accumulateThenReset()),
             0,
             10,
             100);
@@ -98,21 +94,9 @@ public class DoubleHistogramAggregatorTest {
   }
 
   @Test
-  void testHistogramCounts() {
-    assertThat(aggregator.accumulateDouble(1.1).getCounts().length)
-        .isEqualTo(boundaries.length + 1);
-    assertThat(aggregator.accumulateLong(1).getCounts().length).isEqualTo(boundaries.length + 1);
-
-    AggregatorHandle<HistogramAccumulation> aggregatorHandle = aggregator.createHandle();
-    aggregatorHandle.recordDouble(1.1);
-    HistogramAccumulation histogramAccumulation = aggregatorHandle.accumulateThenReset();
-    assertThat(histogramAccumulation).isNotNull();
-    assertThat(histogramAccumulation.getCounts().length).isEqualTo(boundaries.length + 1);
-  }
-
-  @Test
   void testMultithreadedUpdates() throws InterruptedException {
-    final AggregatorHandle<HistogramAccumulation> aggregatorHandle = aggregator.createHandle();
+    final SynchronousHandle<HistogramAccumulation> aggregatorHandle =
+        aggregator.createStreamStorage();
     final Histogram summarizer = new Histogram();
     final ImmutableList<Long> updates =
         ImmutableList.of(1L, 2L, 3L, 5L, 7L, 11L, 13L, 17L, 19L, 23L);
@@ -128,7 +112,7 @@ public class DoubleHistogramAggregatorTest {
                     Executors.callable(
                         () -> {
                           for (int j = 0; j < numberOfUpdates; j++) {
-                            aggregatorHandle.recordLong(v);
+                            aggregatorHandle.record(raw(v));
                             if (ThreadLocalRandom.current().nextInt(10) == 0) {
                               summarizer.process(aggregatorHandle.accumulateThenReset());
                             }
@@ -140,7 +124,9 @@ public class DoubleHistogramAggregatorTest {
     summarizer.process(aggregatorHandle.accumulateThenReset());
 
     assertThat(summarizer.accumulation)
-        .isEqualTo(HistogramAccumulation.create(1010000, new long[] {50000, 50000, 0, 0}));
+        .isEqualTo(
+            HistogramAccumulation.create(
+                1010000, new long[] {50000, 50000, 0, 0}, Collections.emptyList()));
   }
 
   private static final class Histogram {
@@ -161,5 +147,13 @@ public class DoubleHistogramAggregatorTest {
         accumulation = aggregator.merge(accumulation, other);
       }
     }
+  }
+  /** DSL for cleaning up tests. */
+  private static Measurement raw(long value) {
+    return LongMeasurement.createNoContext(value, Attributes.empty());
+  }
+
+  private static Measurement raw(double value) {
+    return DoubleMeasurement.createNoContext(value, Attributes.empty());
   }
 }

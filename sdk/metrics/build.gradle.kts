@@ -16,6 +16,7 @@ otelJava.moduleName.set("io.opentelemetry.sdk.metrics")
 
 dependencies {
     api(project(":api:metrics"))
+    api(project(":context"))
     api(project(":sdk:common"))
 
     annotationProcessor("com.google.auto.value:auto-value")

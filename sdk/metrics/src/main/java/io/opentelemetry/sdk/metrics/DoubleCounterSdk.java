@@ -5,89 +5,77 @@
 
 package io.opentelemetry.sdk.metrics;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BoundDoubleCounter;
 import io.opentelemetry.api.metrics.DoubleCounter;
-import io.opentelemetry.api.metrics.DoubleCounterBuilder;
-import io.opentelemetry.api.metrics.common.Labels;
-import io.opentelemetry.sdk.metrics.aggregator.AggregatorHandle;
-import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
-import io.opentelemetry.sdk.metrics.common.InstrumentType;
-import io.opentelemetry.sdk.metrics.common.InstrumentValueType;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.sdk.metrics.instrument.DoubleMeasurement;
+import io.opentelemetry.sdk.metrics.state.StorageHandle;
+import io.opentelemetry.sdk.metrics.state.WriteableInstrumentStorage;
+import java.util.Objects;
 
-final class DoubleCounterSdk extends AbstractSynchronousInstrument implements DoubleCounter {
+/** Sdk implementation of LongCounter. */
+public class DoubleCounterSdk implements DoubleCounter {
+  private final WriteableInstrumentStorage storage;
 
-  private DoubleCounterSdk(
-      InstrumentDescriptor descriptor, SynchronousInstrumentAccumulator<?> accumulator) {
-    super(descriptor, accumulator);
+  DoubleCounterSdk(WriteableInstrumentStorage storage) {
+    this.storage = storage;
   }
 
   @Override
-  public void add(double increment, Labels labels) {
-    AggregatorHandle<?> aggregatorHandle = acquireHandle(labels);
-    try {
-      if (increment < 0) {
-        throw new IllegalArgumentException("Counters can only increase");
-      }
-      aggregatorHandle.recordDouble(increment);
-    } finally {
-      aggregatorHandle.release();
+  public void add(double value, Attributes attributes, Context context) {
+    if (value < 0) {
+      throw new IllegalArgumentException("Counters can only increase");
     }
+    storage.record(DoubleMeasurement.create(value, attributes, context));
   }
 
   @Override
-  public void add(double increment) {
-    add(increment, Labels.empty());
+  public void add(double value, Attributes attributes) {
+    add(value, attributes, Context.current());
   }
 
   @Override
-  public BoundDoubleCounter bind(Labels labels) {
-    return new BoundInstrument(acquireHandle(labels));
+  public void add(double value) {
+    add(value, Attributes.empty());
   }
 
-  static final class BoundInstrument implements BoundDoubleCounter {
-    private final AggregatorHandle<?> aggregatorHandle;
+  @Override
+  public BoundDoubleCounter bind(Attributes attributes) {
+    Objects.requireNonNull(attributes, "Null attributes");
+    return new SdkBoundDoubleCounter(attributes, storage.bind(attributes));
+  }
 
-    BoundInstrument(AggregatorHandle<?> aggregatorHandle) {
-      this.aggregatorHandle = aggregatorHandle;
+  /**
+   * Simple implementation of bound counter for now.
+   *
+   * <p>This should be updated to use bound handles.
+   */
+  private static class SdkBoundDoubleCounter implements BoundDoubleCounter {
+    private final Attributes attributes;
+    private final StorageHandle handle;
+
+    SdkBoundDoubleCounter(Attributes attributes, StorageHandle handle) {
+      this.attributes = attributes;
+      this.handle = handle;
     }
 
     @Override
-    public void add(double increment) {
-      if (increment < 0) {
+    public void add(double value, Context context) {
+      if (value < 0) {
         throw new IllegalArgumentException("Counters can only increase");
       }
-      aggregatorHandle.recordDouble(increment);
+      handle.record(DoubleMeasurement.create(value, attributes, context));
+    }
+
+    @Override
+    public void add(double value) {
+      add(value, Context.current());
     }
 
     @Override
     public void unbind() {
-      aggregatorHandle.release();
-    }
-  }
-
-  static final class Builder extends AbstractSynchronousInstrumentBuilder<DoubleCounterSdk.Builder>
-      implements DoubleCounterBuilder {
-
-    Builder(
-        String name,
-        MeterProviderSharedState meterProviderSharedState,
-        MeterSharedState meterSharedState) {
-      super(
-          name,
-          InstrumentType.COUNTER,
-          InstrumentValueType.DOUBLE,
-          meterProviderSharedState,
-          meterSharedState);
-    }
-
-    @Override
-    Builder getThis() {
-      return this;
-    }
-
-    @Override
-    public DoubleCounterSdk build() {
-      return buildInstrument(DoubleCounterSdk::new);
+      handle.release();
     }
   }
 }

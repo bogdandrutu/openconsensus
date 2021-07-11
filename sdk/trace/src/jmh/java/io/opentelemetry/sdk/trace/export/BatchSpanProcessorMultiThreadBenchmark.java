@@ -7,6 +7,7 @@ package io.opentelemetry.sdk.trace.export;
 
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import io.opentelemetry.sdk.metrics.export.MetricProducer;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +32,7 @@ public class BatchSpanProcessorMultiThreadBenchmark {
 
   @State(Scope.Benchmark)
   public static class BenchmarkState {
-    private SdkMeterProvider sdkMeterProvider;
+    private MetricProducer collector;
     private BatchSpanProcessor processor;
     private Tracer tracer;
     private int numThreads = 1;
@@ -44,7 +45,8 @@ public class BatchSpanProcessorMultiThreadBenchmark {
 
     @Setup(Level.Iteration)
     public final void setup() {
-      sdkMeterProvider = SdkMeterProvider.builder().buildAndRegisterGlobal();
+      final SdkMeterProvider sdkMeterProvider = SdkMeterProvider.builder().buildAndRegisterGlobal();
+      collector = sdkMeterProvider.newMetricProducer();
       SpanExporter exporter = new DelayingSpanExporter(delayMs);
       processor = BatchSpanProcessor.builder(exporter).build();
       tracer =
@@ -54,7 +56,7 @@ public class BatchSpanProcessorMultiThreadBenchmark {
     @TearDown(Level.Iteration)
     public final void recordMetrics() {
       BatchSpanProcessorMetrics metrics =
-          new BatchSpanProcessorMetrics(sdkMeterProvider.collectAllMetrics(), numThreads);
+          new BatchSpanProcessorMetrics(collector.collectAllMetrics(), numThreads);
       exportedSpans = metrics.exportedSpans();
       droppedSpans = metrics.droppedSpans();
       processor.shutdown().join(10, TimeUnit.SECONDS);

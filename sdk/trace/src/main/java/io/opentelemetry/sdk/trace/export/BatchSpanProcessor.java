@@ -5,11 +5,12 @@
 
 package io.opentelemetry.sdk.trace.export;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BoundLongCounter;
 import io.opentelemetry.api.metrics.GlobalMeterProvider;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.common.Labels;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.internal.DaemonThreadFactory;
@@ -43,7 +44,10 @@ public final class BatchSpanProcessor implements SpanProcessor {
 
   private static final String WORKER_THREAD_NAME =
       BatchSpanProcessor.class.getSimpleName() + "_WorkerThread";
-  private static final String SPAN_PROCESSOR_TYPE_LABEL = "spanProcessorType";
+  private static final AttributeKey<String> SPAN_PROCESSOR_TYPE_LABEL =
+      AttributeKey.stringKey("spanProcessorType");
+  private static final AttributeKey<Boolean> SPAN_PROCESSOR_DROPPED_LABEL =
+      AttributeKey.booleanKey("dropped");
   private static final String SPAN_PROCESSOR_TYPE_VALUE = BatchSpanProcessor.class.getSimpleName();
 
   private final Worker worker;
@@ -156,20 +160,20 @@ public final class BatchSpanProcessor implements SpanProcessor {
       this.exporterTimeoutNanos = exporterTimeoutNanos;
       this.queue = queue;
       this.signal = new ArrayBlockingQueue<>(1);
-      Meter meter = GlobalMeterProvider.getMeter("io.opentelemetry.sdk.trace");
+      Meter meter = GlobalMeterProvider.get().meterBuilder("io.opentelemetry.sdk.trace").build();
       meter
-          .longValueObserverBuilder("queueSize")
+          .gaugeBuilder("queueSize")
+          .ofLongs()
           .setDescription("The number of spans queued")
           .setUnit("1")
-          .setUpdater(
+          .buildWithCallback(
               result ->
                   result.observe(
                       queue.size(),
-                      Labels.of(SPAN_PROCESSOR_TYPE_LABEL, SPAN_PROCESSOR_TYPE_VALUE)))
-          .build();
+                      Attributes.of(SPAN_PROCESSOR_TYPE_LABEL, SPAN_PROCESSOR_TYPE_VALUE)));
       LongCounter processedSpansCounter =
           meter
-              .longCounterBuilder("processedSpans")
+              .counterBuilder("processedSpans")
               .setUnit("1")
               .setDescription(
                   "The number of spans processed by the BatchSpanProcessor. "
@@ -177,10 +181,18 @@ public final class BatchSpanProcessor implements SpanProcessor {
               .build();
       droppedSpans =
           processedSpansCounter.bind(
-              Labels.of(SPAN_PROCESSOR_TYPE_LABEL, SPAN_PROCESSOR_TYPE_VALUE, "dropped", "true"));
+              Attributes.of(
+                  SPAN_PROCESSOR_TYPE_LABEL,
+                  SPAN_PROCESSOR_TYPE_VALUE,
+                  SPAN_PROCESSOR_DROPPED_LABEL,
+                  true));
       exportedSpans =
           processedSpansCounter.bind(
-              Labels.of(SPAN_PROCESSOR_TYPE_LABEL, SPAN_PROCESSOR_TYPE_VALUE, "dropped", "false"));
+              Attributes.of(
+                  SPAN_PROCESSOR_TYPE_LABEL,
+                  SPAN_PROCESSOR_TYPE_VALUE,
+                  SPAN_PROCESSOR_DROPPED_LABEL,
+                  false));
 
       this.batch = new ArrayList<>(this.maxExportBatchSize);
     }

@@ -5,59 +5,44 @@
 
 package io.opentelemetry.api.metrics;
 
-import io.opentelemetry.api.metrics.common.Labels;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.context.Context;
 import javax.annotation.concurrent.ThreadSafe;
 
-/**
- * Counter is the most common synchronous instrument. This instrument supports an {@link #add(long,
- * Labels)}` function for reporting an increment, and is restricted to non-negative increments. The
- * default aggregation is `Sum`.
- *
- * <p>Example:
- *
- * <pre>{@code
- * class YourClass {
- *   private static final Meter meter = OpenTelemetry.getMeterProvider().get("my_library_name");
- *   private static final LongCounter counter =
- *       meter.
- *           .longCounterBuilder("processed_jobs")
- *           .setDescription("Processed jobs")
- *           .setUnit("1")
- *           .build();
- *
- *   // It is recommended that the API user keep a reference to a Bound Counter.
- *   private static final BoundLongCounter someWorkBound =
- *       counter.bind("work_name", "some_work");
- *
- *   void doSomeWork() {
- *      // Your code here.
- *      someWorkBound.add(10);
- *   }
- * }
- * }</pre>
- */
+/** A counter instrument that records {@code long} values. */
 @ThreadSafe
-public interface LongCounter extends SynchronousInstrument<BoundLongCounter> {
+public interface LongCounter extends Counter {
+  /**
+   * Record a value with a set of attributes.
+   *
+   * @param value The increment amount. MUST be non-negative.
+   * @param attributes A set of attributes to associate with the count.
+   * @param context The explicit context to associate with this measurement.
+   */
+  public void add(long value, Attributes attributes, Context context);
+  /**
+   * Record a value with a set of attributes.
+   *
+   * <p>Note: This may use {@code Context.current()} to pull the context associated with this
+   * measurement.
+   *
+   * @param value The increment amount. MUST be non-negative.
+   * @param attributes A set of attributes to associate with the count.
+   */
+  public void add(long value, Attributes attributes);
+  /**
+   * Reecord a value.
+   *
+   * <p>Note: This may use {@code Context.current()} to pull the context associated with this
+   * measurement.
+   *
+   * @param value The increment amount. MUST be non-negative.
+   */
+  public void add(long value);
 
   /**
-   * Adds the given {@code increment} to the current value. The values cannot be negative.
-   *
-   * <p>The value added is associated with the current {@code Context} and provided set of labels.
-   *
-   * @param increment the value to add.
-   * @param labels the set of labels to be associated to this recording.
+   * Construct a bound version of this instrument where all recorded values use the given
+   * attributes.
    */
-  void add(long increment, Labels labels);
-
-  /**
-   * Adds the given {@code increment} to the current value. The values cannot be negative.
-   *
-   * <p>The value added is associated with the current {@code Context} and empty labels.
-   *
-   * @param increment the value to add.
-   */
-  void add(long increment);
-
-  @Override
-  BoundLongCounter bind(Labels labels);
+  public BoundLongCounter bind(Attributes attributes);
 }

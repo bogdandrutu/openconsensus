@@ -5,85 +5,67 @@
 
 package io.opentelemetry.sdk.metrics;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BoundDoubleUpDownCounter;
 import io.opentelemetry.api.metrics.DoubleUpDownCounter;
-import io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
-import io.opentelemetry.api.metrics.common.Labels;
-import io.opentelemetry.sdk.metrics.aggregator.AggregatorHandle;
-import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
-import io.opentelemetry.sdk.metrics.common.InstrumentType;
-import io.opentelemetry.sdk.metrics.common.InstrumentValueType;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.sdk.metrics.instrument.DoubleMeasurement;
+import io.opentelemetry.sdk.metrics.state.StorageHandle;
+import io.opentelemetry.sdk.metrics.state.WriteableInstrumentStorage;
+import java.util.Objects;
 
-final class DoubleUpDownCounterSdk extends AbstractSynchronousInstrument
-    implements DoubleUpDownCounter {
+/** Sdk implementation of DoubleUpDownCounter. */
+public class DoubleUpDownCounterSdk implements DoubleUpDownCounter {
+  private final WriteableInstrumentStorage storage;
 
-  private DoubleUpDownCounterSdk(
-      InstrumentDescriptor descriptor, SynchronousInstrumentAccumulator<?> accumulator) {
-    super(descriptor, accumulator);
+  DoubleUpDownCounterSdk(WriteableInstrumentStorage storage) {
+    this.storage = storage;
   }
 
   @Override
-  public void add(double increment, Labels labels) {
-    AggregatorHandle<?> aggregatorHandle = acquireHandle(labels);
-    try {
-      aggregatorHandle.recordDouble(increment);
-    } finally {
-      aggregatorHandle.release();
-    }
+  public void add(double value, Attributes attributes, Context context) {
+    storage.record(DoubleMeasurement.create(value, attributes, context));
   }
 
   @Override
-  public void add(double increment) {
-    add(increment, Labels.empty());
+  public void add(double value, Attributes attributes) {
+    add(value, attributes, Context.current());
   }
 
   @Override
-  public BoundDoubleUpDownCounter bind(Labels labels) {
-    return new BoundInstrument(acquireHandle(labels));
+  public void add(double value) {
+    add(value, Attributes.empty());
   }
 
-  static final class BoundInstrument implements BoundDoubleUpDownCounter {
-    private final AggregatorHandle<?> aggregatorHandle;
+  @Override
+  public BoundDoubleUpDownCounter bind(Attributes attributes) {
+    Objects.requireNonNull(attributes, "Null attributes");
+    return new SdkBoundDoubleUpDownCounter(attributes, storage.bind(attributes));
+  }
 
-    BoundInstrument(AggregatorHandle<?> aggregatorHandle) {
-      this.aggregatorHandle = aggregatorHandle;
+  /** Simple implementation of bound counter for now. */
+  private static class SdkBoundDoubleUpDownCounter implements BoundDoubleUpDownCounter {
+    private final Attributes attributes;
+    private final StorageHandle handle;
+
+    SdkBoundDoubleUpDownCounter(Attributes attributes, StorageHandle handle) {
+      this.attributes = attributes;
+      this.handle = handle;
     }
 
     @Override
-    public void add(double increment) {
-      aggregatorHandle.recordDouble(increment);
+    public void add(double value, Context context) {
+      handle.record(DoubleMeasurement.create(value, attributes, context));
+    }
+
+    @Override
+    public void add(double value) {
+      add(value, Context.current());
     }
 
     @Override
     public void unbind() {
-      aggregatorHandle.release();
-    }
-  }
-
-  static final class Builder
-      extends AbstractSynchronousInstrumentBuilder<DoubleUpDownCounterSdk.Builder>
-      implements DoubleUpDownCounterBuilder {
-
-    Builder(
-        String name,
-        MeterProviderSharedState meterProviderSharedState,
-        MeterSharedState meterSharedState) {
-      super(
-          name,
-          InstrumentType.UP_DOWN_COUNTER,
-          InstrumentValueType.DOUBLE,
-          meterProviderSharedState,
-          meterSharedState);
-    }
-
-    @Override
-    Builder getThis() {
-      return this;
-    }
-
-    @Override
-    public DoubleUpDownCounterSdk build() {
-      return buildInstrument(DoubleUpDownCounterSdk::new);
+      handle.release();
     }
   }
 }

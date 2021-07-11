@@ -9,14 +9,10 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.metrics.MetricAssertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.common.Labels;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.sdk.common.InstrumentationLibraryInfo;
-import io.opentelemetry.sdk.metrics.aggregator.AggregatorFactory;
-import io.opentelemetry.sdk.metrics.common.InstrumentType;
-import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
-import io.opentelemetry.sdk.metrics.processor.LabelsProcessorFactory;
-import io.opentelemetry.sdk.metrics.view.InstrumentSelector;
-import io.opentelemetry.sdk.metrics.view.View;
+import io.opentelemetry.sdk.metrics.export.MetricProducer;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.time.TestClock;
 import java.time.Duration;
@@ -33,44 +29,39 @@ class DoubleSumObserverSdkTest {
   private final SdkMeterProviderBuilder sdkMeterProviderBuilder =
       SdkMeterProvider.builder().setClock(testClock).setResource(RESOURCE);
 
-  @Test
-  void collectMetrics_NoCallback() {
-    SdkMeterProvider sdkMeterProvider = sdkMeterProviderBuilder.build();
-    sdkMeterProvider
-        .get(getClass().getName())
-        .doubleSumObserverBuilder("testObserver")
-        .setDescription("My own DoubleSumObserver")
-        .setUnit("ms")
-        .build();
-    assertThat(sdkMeterProvider.collectAllMetrics()).isEmpty();
+  // Consistent way of getting/naming our Meter.
+  private Meter sdkMeter(MeterProvider provider) {
+    return provider.meterBuilder(getClass().getName()).build();
   }
 
   @Test
   void collectMetrics_NoRecords() {
     SdkMeterProvider sdkMeterProvider = sdkMeterProviderBuilder.build();
-    sdkMeterProvider
-        .get(getClass().getName())
-        .doubleSumObserverBuilder("testObserver")
+    MetricProducer collector = sdkMeterProvider.newMetricProducer();
+    sdkMeter(sdkMeterProvider)
+        .counterBuilder("testObserver")
+        .ofDoubles()
         .setDescription("My own DoubleSumObserver")
         .setUnit("ms")
-        .setUpdater(result -> {})
-        .build();
-    assertThat(sdkMeterProvider.collectAllMetrics()).isEmpty();
+        .buildWithCallback(result -> {});
+    assertThat(collector.collectAllMetrics()).isEmpty();
   }
 
   @Test
   @SuppressWarnings("unchecked")
   void collectMetrics_WithOneRecord() {
     SdkMeterProvider sdkMeterProvider = sdkMeterProviderBuilder.build();
+    MetricProducer collector = sdkMeterProvider.newMetricProducer();
     sdkMeterProvider
-        .get(getClass().getName())
-        .doubleSumObserverBuilder("testObserver")
+        .meterBuilder(getClass().getName())
+        .build()
+        .counterBuilder("testObserver")
+        .ofDoubles()
         .setDescription("My own DoubleSumObserver")
         .setUnit("ms")
-        .setUpdater(result -> result.observe(12.1d, Labels.of("k", "v")))
-        .build();
+        .buildWithCallback(result -> result.observe(12.1d, Attributes.of(stringKey("k"), "v")));
     testClock.advance(Duration.ofNanos(SECOND_NANOS));
-    assertThat(sdkMeterProvider.collectAllMetrics())
+    assertThat(collector.collectAllMetrics())
         .satisfiesExactly(
             metric ->
                 assertThat(metric)
@@ -93,7 +84,7 @@ class DoubleSumObserverSdkTest {
                                 .hasSize(1)
                                 .containsEntry("k", "v")));
     testClock.advance(Duration.ofNanos(SECOND_NANOS));
-    assertThat(sdkMeterProvider.collectAllMetrics())
+    assertThat(collector.collectAllMetrics())
         .satisfiesExactly(
             metric ->
                 assertThat(metric)
@@ -110,73 +101,6 @@ class DoubleSumObserverSdkTest {
                                 .hasStartEpochNanos(testClock.now() - 2 * SECOND_NANOS)
                                 .hasEpochNanos(testClock.now())
                                 .hasValue(12.1)
-                                .attributes()
-                                .hasSize(1)
-                                .containsEntry("k", "v")));
-  }
-
-  @Test
-  @SuppressWarnings("unchecked")
-  void collectMetrics_DeltaSumAggregator() {
-    SdkMeterProvider sdkMeterProvider =
-        sdkMeterProviderBuilder
-            .registerView(
-                InstrumentSelector.builder().setInstrumentType(InstrumentType.SUM_OBSERVER).build(),
-                View.builder()
-                    .setLabelsProcessorFactory(LabelsProcessorFactory.noop())
-                    .setAggregatorFactory(AggregatorFactory.sum(AggregationTemporality.DELTA))
-                    .build())
-            .build();
-    sdkMeterProvider
-        .get(getClass().getName())
-        .doubleSumObserverBuilder("testObserver")
-        .setDescription("My own DoubleSumObserver")
-        .setUnit("ms")
-        .setUpdater(result -> result.observe(12.1d, Labels.of("k", "v")))
-        .build();
-    testClock.advance(Duration.ofNanos(SECOND_NANOS));
-    assertThat(sdkMeterProvider.collectAllMetrics())
-        .satisfiesExactly(
-            metric ->
-                assertThat(metric)
-                    .hasResource(RESOURCE)
-                    .hasInstrumentationLibrary(INSTRUMENTATION_LIBRARY_INFO)
-                    .hasName("testObserver")
-                    .hasDescription("My own DoubleSumObserver")
-                    .hasUnit("ms")
-                    .hasDoubleSum()
-                    .isDelta()
-                    .isMonotonic()
-                    .points()
-                    .satisfiesExactlyInAnyOrder(
-                        point ->
-                            assertThat(point)
-                                .hasStartEpochNanos(testClock.now() - SECOND_NANOS)
-                                .hasEpochNanos(testClock.now())
-                                .hasValue(12.1)
-                                .attributes()
-                                .hasSize(1)
-                                .containsEntry("k", "v")));
-    testClock.advance(Duration.ofNanos(SECOND_NANOS));
-    assertThat(sdkMeterProvider.collectAllMetrics())
-        .satisfiesExactly(
-            metric ->
-                assertThat(metric)
-                    .hasResource(RESOURCE)
-                    .hasInstrumentationLibrary(INSTRUMENTATION_LIBRARY_INFO)
-                    .hasName("testObserver")
-                    .hasDescription("My own DoubleSumObserver")
-                    .hasUnit("ms")
-                    .hasDoubleSum()
-                    .isDelta()
-                    .isMonotonic()
-                    .points()
-                    .satisfiesExactlyInAnyOrder(
-                        point ->
-                            assertThat(point)
-                                .hasStartEpochNanos(testClock.now() - SECOND_NANOS)
-                                .hasEpochNanos(testClock.now())
-                                .hasValue(0)
                                 .attributes()
                                 .hasSize(1)
                                 .containsEntry("k", "v")));

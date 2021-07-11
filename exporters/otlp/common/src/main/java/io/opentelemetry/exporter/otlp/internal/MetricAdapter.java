@@ -34,14 +34,11 @@ import io.opentelemetry.sdk.metrics.data.DoubleHistogramData;
 import io.opentelemetry.sdk.metrics.data.DoubleHistogramPointData;
 import io.opentelemetry.sdk.metrics.data.DoublePointData;
 import io.opentelemetry.sdk.metrics.data.DoubleSumData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryData;
-import io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData;
 import io.opentelemetry.sdk.metrics.data.LongExemplar;
 import io.opentelemetry.sdk.metrics.data.LongGaugeData;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.LongSumData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.metrics.data.ValueAtPercentile;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -127,7 +124,8 @@ public final class MetricAdapter {
   }
 
   // fall through comment isn't working for some reason.
-  @SuppressWarnings("fallthrough")
+  // Aditionally, we have deprecated portions of the metrics data model we're supporting.
+  @SuppressWarnings(value = {"fallthrough", "deprecation"})
   static Metric toProtoMetric(MetricData metricData) {
     Metric.Builder builder =
         Metric.newBuilder()
@@ -157,7 +155,10 @@ public final class MetricAdapter {
                 .build());
         break;
       case SUMMARY:
-        DoubleSummaryData doubleSummaryData = metricData.getDoubleSummaryData();
+        // WE must use full type because importing triggers the "no deprecated usage" warning,
+        // ironically not letting us depreecate our own API.
+        io.opentelemetry.sdk.metrics.data.DoubleSummaryData doubleSummaryData =
+            metricData.getDoubleSummaryData();
         builder.setSummary(
             Summary.newBuilder()
                 .addAllDataPoints(toSummaryDataPoints(doubleSummaryData.getPoints()))
@@ -237,9 +238,13 @@ public final class MetricAdapter {
     return result;
   }
 
-  static List<SummaryDataPoint> toSummaryDataPoints(Collection<DoubleSummaryPointData> points) {
+  @SuppressWarnings("deprecation")
+  // Ironically, we're deprecating our own data model components and have to supress these due to
+  // "treat warnigns as errors" in our build.
+  static List<SummaryDataPoint> toSummaryDataPoints(
+      Collection<io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData> points) {
     List<SummaryDataPoint> result = new ArrayList<>(points.size());
-    for (DoubleSummaryPointData doubleSummaryPoint : points) {
+    for (io.opentelemetry.sdk.metrics.data.DoubleSummaryPointData doubleSummaryPoint : points) {
       SummaryDataPoint.Builder builder =
           SummaryDataPoint.newBuilder()
               .setStartTimeUnixNano(doubleSummaryPoint.getStartEpochNanos())
@@ -253,7 +258,8 @@ public final class MetricAdapter {
       // Not calling directly addAllQuantileValues because that generates couple of unnecessary
       // allocations if empty list.
       if (!doubleSummaryPoint.getPercentileValues().isEmpty()) {
-        for (ValueAtPercentile valueAtPercentile : doubleSummaryPoint.getPercentileValues()) {
+        for (io.opentelemetry.sdk.metrics.data.ValueAtPercentile valueAtPercentile :
+            doubleSummaryPoint.getPercentileValues()) {
           builder.addQuantileValues(
               SummaryDataPoint.ValueAtQuantile.newBuilder()
                   .setQuantile(valueAtPercentile.getPercentile() / 100.0)

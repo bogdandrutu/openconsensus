@@ -5,84 +5,54 @@
 
 package io.opentelemetry.sdk.metrics.aggregator;
 
-import io.opentelemetry.api.metrics.common.Labels;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.metrics.data.MetricDataType;
+import io.opentelemetry.sdk.metrics.instrument.Measurement;
 import java.util.Map;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.Immutable;
 
 /**
- * Aggregator represents the abstract class for all the available aggregations that can be computed
- * during the accumulation phase for all the instrument.
+ * A processor that can generate aggregators for metrics streams while also combining those streams
+ * into {@link MetricData}.
  *
- * <p>The synchronous instruments will create an {@link AggregatorHandle} to record individual
- * measurements synchronously, and for asynchronous the {@link #accumulateDouble(double)} or {@link
- * #accumulateLong(long)} will be used when reading values from the instrument callbacks.
+ * <p>Aggregators have the following lifecycle:
  */
-@Immutable
 public interface Aggregator<T> {
-  /**
-   * Returns a new {@link AggregatorHandle}. This MUST by used by the synchronous to aggregate
-   * recorded measurements during the collection cycle.
-   *
-   * @return a new {@link AggregatorHandle}.
-   */
-  AggregatorHandle<T> createHandle();
 
   /**
-   * Returns a new {@code Accumulation} for the given value. This MUST be used by the asynchronous
-   * instruments to create {@code Accumulation} that are passed to the processor.
+   * Construct a handle for storing highly-concurrent measurement input.
    *
-   * @param value the given value to be used to create the {@code Accumulation}.
-   * @return a new {@code Accumulation} for the given value.
+   * <p>SynchronousHandle instances *must* be threadsafe and allow for high contention across
+   * threads.
    */
-  default T accumulateLong(long value) {
-    throw new UnsupportedOperationException(
-        "This aggregator does not support recording long values.");
-  }
+  public SynchronousHandle<T> createStreamStorage();
 
   /**
-   * Returns a new {@code Accumulation} for the given value. This MUST be used by the asynchronous
-   * instruments to create {@code Accumulation} that are passed to the processor.
-   *
-   * @param value the given value to be used to create the {@code Accumulation}.
-   * @return a new {@code Accumulation} for the given value.
+   * In the event we receive two asynchronous measurements for the same set of attributes, this
+   * method merges the values.
    */
-  default T accumulateDouble(double value) {
-    throw new UnsupportedOperationException(
-        "This aggregator does not support recording double values.");
-  }
+  T merge(T current, T accumulated);
+
+  /** Constructs the accumulation storage from a raw measurement. */
+  T asyncAccumulation(Measurement measurement);
 
   /**
-   * Returns the result of the merge of the given accumulations.
+   * Returns final accumulation result after looking at the previous reported accumulation and the
+   * current set of measurement accumulations.
    *
-   * @param previousAccumulation the previously captured accumulation
-   * @param accumulation the newly captured accumulation
-   * @return the result of the merge of the given accumulations.
+   * @param isAsynchronousMeasurement true if measurements were taken asynchronously (cumulatives)
+   *     or synchronously (deltas).
    */
-  T merge(T previousAccumulation, T accumulation);
+  Map<Attributes, T> diffPrevious(
+      Map<Attributes, T> previous, Map<Attributes, T> current, boolean isAsynchronousMeasurement);
 
   /**
-   * Returns {@code true} if the processor needs to keep the previous collected state in order to
-   * compute the desired metric.
+   * Construct a metric stream.
    *
-   * @return {@code true} if the processor needs to keep the previous collected state.
+   * @param accumulated The underlying stream points.
+   * @param startEpochNanos The start time for the metrics SDK.
+   * @param lastEpochNanos The time of the last collection period (i.e. delta start time).
+   * @param epochNanos The current collection period time (i.e. end time).
    */
-  boolean isStateful();
-
-  /**
-   * Returns the {@link MetricData} that this {@code Aggregation} will produce.
-   *
-   * @param accumulationByLabels the map of Labels to Accumulation.
-   * @param startEpochNanos the startEpochNanos for the {@code Point}.
-   * @param epochNanos the epochNanos for the {@code Point}.
-   * @return the {@link MetricDataType} that this {@code Aggregation} will produce.
-   */
-  @Nullable
-  MetricData toMetricData(
-      Map<Labels, T> accumulationByLabels,
-      long startEpochNanos,
-      long lastCollectionEpoch,
-      long epochNanos);
+  MetricData buildMetric(
+      Map<Attributes, T> accumulated, long startEpochNanos, long lastEpochNanos, long epochNanos);
 }

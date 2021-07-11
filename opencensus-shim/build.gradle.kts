@@ -1,3 +1,5 @@
+import org.gradle.api.plugins.JavaPlugin.*
+
 plugins {
     id("otel.java-conventions")
     id("otel.publish-conventions")
@@ -21,4 +23,11 @@ dependencies {
 
     testImplementation("org.slf4j:slf4j-simple")
     testImplementation("io.opencensus:opencensus-impl")
+}
+
+tasks {
+    withType(JavaCompile::class) {
+        // Ignore usage of deprecated Summary metric type.
+        options.compilerArgs.add("-Xlint:-deprecation")
+    }
 }

@@ -5,89 +5,73 @@
 
 package io.opentelemetry.sdk.metrics;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BoundLongCounter;
 import io.opentelemetry.api.metrics.LongCounter;
-import io.opentelemetry.api.metrics.LongCounterBuilder;
-import io.opentelemetry.api.metrics.common.Labels;
-import io.opentelemetry.sdk.metrics.aggregator.AggregatorHandle;
-import io.opentelemetry.sdk.metrics.common.InstrumentDescriptor;
-import io.opentelemetry.sdk.metrics.common.InstrumentType;
-import io.opentelemetry.sdk.metrics.common.InstrumentValueType;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.sdk.metrics.instrument.LongMeasurement;
+import io.opentelemetry.sdk.metrics.state.StorageHandle;
+import io.opentelemetry.sdk.metrics.state.WriteableInstrumentStorage;
+import java.util.Objects;
 
-final class LongCounterSdk extends AbstractSynchronousInstrument implements LongCounter {
+/** Sdk implementation of LongCounter. */
+public class LongCounterSdk implements LongCounter {
+  private final WriteableInstrumentStorage storage;
 
-  private LongCounterSdk(
-      InstrumentDescriptor descriptor, SynchronousInstrumentAccumulator<?> accumulator) {
-    super(descriptor, accumulator);
+  LongCounterSdk(WriteableInstrumentStorage storage) {
+    this.storage = storage;
   }
 
   @Override
-  public void add(long increment, Labels labels) {
-    AggregatorHandle<?> aggregatorHandle = acquireHandle(labels);
-    try {
-      if (increment < 0) {
-        throw new IllegalArgumentException("Counters can only increase");
-      }
-      aggregatorHandle.recordLong(increment);
-    } finally {
-      aggregatorHandle.release();
+  public void add(long value, Attributes attributes, Context context) {
+    if (value < 0) {
+      throw new IllegalArgumentException("Counters can only increase");
     }
+    storage.record(LongMeasurement.create(value, attributes, context));
   }
 
   @Override
-  public void add(long increment) {
-    add(increment, Labels.empty());
+  public void add(long value, Attributes attributes) {
+    add(value, attributes, Context.current());
   }
 
   @Override
-  public BoundLongCounter bind(Labels labels) {
-    return new BoundInstrument(acquireHandle(labels));
+  public void add(long value) {
+    add(value, Attributes.empty());
   }
 
-  static final class BoundInstrument implements BoundLongCounter {
-    private final AggregatorHandle<?> aggregatorHandle;
+  @Override
+  public BoundLongCounter bind(Attributes attributes) {
+    Objects.requireNonNull(attributes, "Null attributes");
+    return new SdkBoundLongCounter(attributes, storage.bind(attributes));
+  }
 
-    BoundInstrument(AggregatorHandle<?> aggregatorHandle) {
-      this.aggregatorHandle = aggregatorHandle;
+  /** Simple implementation of bound counter for now. */
+  private static class SdkBoundLongCounter implements BoundLongCounter {
+    private final Attributes attributes;
+    private final StorageHandle handle;
+
+    SdkBoundLongCounter(Attributes attributes, StorageHandle handle) {
+      this.attributes = attributes;
+      this.handle = handle;
     }
 
     @Override
-    public void add(long increment) {
-      if (increment < 0) {
+    public void add(long value, Context context) {
+      if (value < 0) {
         throw new IllegalArgumentException("Counters can only increase");
       }
-      aggregatorHandle.recordLong(increment);
+      handle.record(LongMeasurement.create(value, attributes, context));
+    }
+
+    @Override
+    public void add(long value) {
+      add(value, Context.current());
     }
 
     @Override
     public void unbind() {
-      aggregatorHandle.release();
-    }
-  }
-
-  static final class Builder extends AbstractSynchronousInstrumentBuilder<Builder>
-      implements LongCounterBuilder {
-
-    Builder(
-        String name,
-        MeterProviderSharedState meterProviderSharedState,
-        MeterSharedState meterSharedState) {
-      super(
-          name,
-          InstrumentType.COUNTER,
-          InstrumentValueType.LONG,
-          meterProviderSharedState,
-          meterSharedState);
-    }
-
-    @Override
-    Builder getThis() {
-      return this;
-    }
-
-    @Override
-    public LongCounterSdk build() {
-      return buildInstrument(LongCounterSdk::new);
+      handle.release();
     }
   }
 }

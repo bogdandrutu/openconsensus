@@ -5,21 +5,28 @@
 
 package io.opentelemetry.api.metrics;
 
+import io.opentelemetry.context.Context;
 import javax.annotation.concurrent.ThreadSafe;
 
-/** A {@code Bound Instrument} for a {@link LongCounter}. */
+/** A counter instrument that records {@code long} values with preassociated attributes. */
 @ThreadSafe
-public interface BoundLongCounter extends BoundSynchronousInstrument {
-
+public interface BoundLongCounter {
   /**
-   * Adds the given {@code increment} to the current value. The values cannot be negative.
+   * Reecord a value with prebound attributes.
    *
-   * <p>The value added is associated with the current {@code Context}.
+   * <p>Note: This may use {@code Context.current()} to pull the context associated with this
+   * measurement.
    *
-   * @param increment the value to add.
+   * @param value The increment amount. MUST be non-negative.
    */
-  void add(long increment);
+  public void add(long value);
+  /**
+   * Record a value with prebound attributes.
+   *
+   * @param value The increment amount. MUST be non-negative.
+   * @param context The explicit context to associate with this measurement.
+   */
+  public void add(long value, Context context);
 
-  @Override
-  void unbind();
+  public void unbind();
 }

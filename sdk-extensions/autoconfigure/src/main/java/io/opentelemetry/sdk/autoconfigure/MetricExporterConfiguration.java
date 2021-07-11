@@ -90,7 +90,7 @@ final class MetricExporterConfiguration {
       ConfigProperties config, SdkMeterProvider meterProvider, MetricExporter exporter) {
     IntervalMetricReaderBuilder readerBuilder =
         IntervalMetricReader.builder()
-            .setMetricProducers(Collections.singleton(meterProvider))
+            .setMetricProducers(Collections.singleton(meterProvider.newMetricProducer()))
             .setMetricExporter(exporter);
     Duration exportInterval = config.getDuration("otel.imr.export.interval");
     if (exportInterval != null) {
@@ -106,7 +106,9 @@ final class MetricExporterConfiguration {
         "io.opentelemetry.exporter.prometheus.PrometheusCollector",
         "Prometheus Metrics Server",
         "opentelemetry-exporter-prometheus");
-    PrometheusCollector.builder().setMetricProducer(meterProvider).buildAndRegister();
+    PrometheusCollector.builder()
+        .setMetricProducer(meterProvider.newMetricProducer())
+        .buildAndRegister();
     Integer port = config.getInt("otel.exporter.prometheus.port");
     if (port == null) {
       port = 9464;
