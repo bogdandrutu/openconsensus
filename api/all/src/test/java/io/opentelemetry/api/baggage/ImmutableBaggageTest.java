@@ -94,6 +94,14 @@ class ImmutableBaggageTest {
   }
 
   @Test
+  void put_nonZeroLengthEmptyKey() {
+    BaggageBuilder builder = ONE_ENTRY.toBuilder();
+    Baggage built = builder.build();
+    builder.put(" ", V2, TMD);
+    assertThat(builder.build()).isEqualTo(built);
+  }
+
+  @Test
   void put_nullMetadata() {
     BaggageBuilder builder = ONE_ENTRY.toBuilder();
     Baggage built = builder.build();

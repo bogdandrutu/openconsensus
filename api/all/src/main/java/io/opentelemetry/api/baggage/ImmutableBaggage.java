@@ -94,7 +94,7 @@ final class ImmutableBaggage extends ImmutableKeyValuePairs<String, BaggageEntry
    * @return whether the name is valid.
    */
   private static boolean isKeyValid(String name) {
-    return name != null && !name.isEmpty() && StringUtils.isPrintableString(name);
+    return name != null && !name.trim().isEmpty() && StringUtils.isPrintableString(name);
   }
 
   /**
