@@ -64,10 +64,11 @@ public final class {{class}} {
   {%- for attribute in attributes if attribute.is_local and not attribute.ref %}
 
   /**
-  * {{attribute.brief | render_markdown}}
+  * {{attribute.brief | render_markdown(code="{{@code {0}}}", paragraph="{0}")}}
     {%- if attribute.note %}
   *
-  * <p>Notes: {{attribute.note | render_markdown}}
+  * <p>Notes:
+    <ul> {{attribute.note | render_markdown(code="{{@code {0}}}", paragraph="<li>{0}</li>", list="{0}")}} </ul>
     {%- endif %}
     {%- if attribute.deprecated %}
   *
