@@ -68,6 +68,23 @@ class TracerShimTest {
   }
 
   @Test
+  void activateSpan_withoutShim() {
+    // Create and activate a Span without the Shim layer, in order to verify
+    // we keep on working as expected (even if not as efficiently).
+    io.opentelemetry.api.trace.Span span =
+        otelTesting.getOpenTelemetry().getTracer("opentracingshim").spanBuilder("one").startSpan();
+    try (io.opentelemetry.context.Scope scope = span.makeCurrent()) {
+      assertThat(tracerShim.activeSpan()).isNotNull();
+      assertThat(tracerShim.scopeManager().activeSpan()).isNotNull();
+      assertThat(((SpanShim) tracerShim.activeSpan()).getSpan()).isEqualTo(span);
+      assertThat(((SpanShim) tracerShim.scopeManager().activeSpan()).getSpan()).isEqualTo(span);
+    }
+
+    assertThat(tracerShim.activeSpan()).isNull();
+    assertThat(tracerShim.scopeManager().activeSpan()).isNull();
+  }
+
+  @Test
   void extract_nullContext() {
     SpanContext result =
         tracerShim.extract(Format.Builtin.TEXT_MAP, new TextMapAdapter(Collections.emptyMap()));
