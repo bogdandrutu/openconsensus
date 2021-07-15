@@ -1,2 +1,11 @@
 Comparing source compatibility of  against 
-No changes.
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.context.propagation.CompositeTextMapPropagatorBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.context.propagation.CompositeTextMapPropagatorBuilder addExtractor(io.opentelemetry.context.propagation.TextMapPropagator)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.context.propagation.CompositeTextMapPropagatorBuilder addInjector(io.opentelemetry.context.propagation.TextMapPropagator)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.context.propagation.CompositeTextMapPropagatorBuilder addPropagator(io.opentelemetry.context.propagation.TextMapPropagator)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.context.propagation.TextMapPropagator build()
+***! MODIFIED INTERFACE: PUBLIC ABSTRACT io.opentelemetry.context.propagation.TextMapPropagator  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	+++! NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.context.propagation.CompositeTextMapPropagatorBuilder builder()
