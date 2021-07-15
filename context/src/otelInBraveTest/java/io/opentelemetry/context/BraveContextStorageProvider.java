@@ -50,10 +50,18 @@ public class BraveContextStorageProvider implements ContextStorageProvider {
     public Context current() {
       return new BraveContextWrapper(Tracing.current().currentTraceContext().get());
     }
+
+    @Override
+    public Context root() {
+      return BraveContextWrapper.ROOT;
+    }
   }
 
   // Need to wrap the Context because brave findExtra searches for perfect match of the class.
   static final class BraveContextWrapper implements Context {
+
+    static final BraveContextWrapper ROOT = new BraveContextWrapper(null, ArrayBasedContext.root());
+
     @Nullable private final TraceContext baseBraveContext;
     private final Context delegate;
 
@@ -93,7 +101,7 @@ public class BraveContextStorageProvider implements ContextStorageProvider {
 
   private static Context fromBraveContext(@Nullable TraceContext braveContext) {
     if (braveContext == null) {
-      return Context.root();
+      return BraveContextWrapper.ROOT.delegate;
     }
     List<Object> extra = braveContext.extra();
     for (int i = extra.size() - 1; i >= 0; i--) {

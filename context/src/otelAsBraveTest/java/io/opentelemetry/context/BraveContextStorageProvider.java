@@ -43,7 +43,12 @@ public class BraveContextStorageProvider implements ContextStorageProvider {
       if (current != null) {
         return new BraveContextWrapper(current);
       }
-      return new BraveContextWrapper(TraceContext.newBuilder().traceId(1).spanId(1).build());
+      return root();
+    }
+
+    @Override
+    public Context root() {
+      return BraveContextWrapper.ROOT;
     }
   }
 
@@ -85,6 +90,9 @@ public class BraveContextStorageProvider implements ContextStorageProvider {
   }
 
   private static class BraveContextWrapper implements Context {
+
+    private static final BraveContextWrapper ROOT =
+        new BraveContextWrapper(TraceContext.newBuilder().traceId(1).spanId(1).build());
 
     private final TraceContext braveContext;
 

@@ -96,7 +96,7 @@ public interface Context {
    * is only a workaround hiding an underlying context propagation issue.
    */
   static Context root() {
-    return ArrayBasedContext.root();
+    return ContextStorage.get().root();
   }
 
   /**

@@ -102,4 +102,14 @@ public interface ContextStorage {
    */
   @Nullable
   Context current();
+
+  /**
+   * Returns the root {@link Context} which all other {@link Context} are derived from.
+   *
+   * <p>The default implementation returns the root {@link ArrayBasedContext}, but subclasses can
+   * override this method to return a root instance of a different {@link Context} implementation.
+   */
+  default Context root() {
+    return ArrayBasedContext.root();
+  }
 }

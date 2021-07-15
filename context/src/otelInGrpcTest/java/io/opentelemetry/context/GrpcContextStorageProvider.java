@@ -7,7 +7,7 @@ package io.opentelemetry.context;
 
 public class GrpcContextStorageProvider implements ContextStorageProvider {
   private static final io.grpc.Context.Key<Context> OTEL_CONTEXT =
-      io.grpc.Context.keyWithDefault("otel-context", Context.root());
+      io.grpc.Context.keyWithDefault("otel-context", GrpcContextWrapper.ROOT.context);
 
   @Override
   public ContextStorage get() {
@@ -44,9 +44,18 @@ public class GrpcContextStorageProvider implements ContextStorageProvider {
       io.grpc.Context grpcContext = io.grpc.Context.current();
       return GrpcContextWrapper.wrapperFromGrpc(grpcContext);
     }
+
+    @Override
+    public Context root() {
+      return GrpcContextWrapper.ROOT;
+    }
   }
 
   private static class GrpcContextWrapper implements Context {
+
+    private static final GrpcContextWrapper ROOT =
+        new GrpcContextWrapper(io.grpc.Context.ROOT, ArrayBasedContext.root());
+
     // If otel context changes the grpc Context may be out of sync.
     // There are 2 options here: 1. always update the grpc Context, 2. update only when needed.
     // Currently the second one is implemented.
