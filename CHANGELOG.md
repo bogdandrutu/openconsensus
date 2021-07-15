@@ -179,6 +179,7 @@ more details.
 - The shim now supports methods that take a timestamp as a parameter. 
 - You can now specify both the `TEXT_MAP` and the `HTTP_HEADER` type propagators for the shim. 
 See `io.opentelemetry.opentracingshim.OpenTracingPropagators` for details.
+- Add `OpenTracingShimBuilder` class to create the shim.
 
 ### Extensions
 

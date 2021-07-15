@@ -11,6 +11,9 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.TracerProvider;
 
 /**
+ * This class is deprecated. Please Use {@link OpenTracingShimBuilder} instead to create an
+ * OpenTracing {@link io.opentracing.Tracer} instance.
+ *
  * Factory for creating an OpenTracing {@link io.opentracing.Tracer} that is implemented using the
  * OpenTelemetry APIs.
  */
